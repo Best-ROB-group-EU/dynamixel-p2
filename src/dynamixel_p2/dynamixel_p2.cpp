@@ -4,4 +4,13 @@
 
 #include "dynamixel_p2.h"
 
+
+
+int main (){
+
+
+
+
+    return 0;
+}
 // PRIVATE METHODS
