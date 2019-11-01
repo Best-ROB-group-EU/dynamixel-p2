@@ -25,20 +25,22 @@ void initSettings();
 
 class Dynamixel_p2 {
 private:
-    void createHeader(){}; // Function to build header (FF FF FD 00)
-    void insertBytes(){}; // Function to insert an arbitrary amount of bytes at position in array
-    void transmitPackage(){}; // Function to send a package
-    void receiveStatusPackage(){}; // Function to read the contents of received packages
+    void CreateHeader(unsigned char *tx_packet){}; // Function to build header (FF FF FD 00)
+    void CreateId(unsigned char *tx_packet, unsigned char id){}; // Function to add ID to package
+    unsigned char CreateInstruction(unsigned char *tx_packet unsigned char instruction, unsigned char parameters){};
+    int CreateLength(unsigned char *tx_packet int parameters_size){};
+    //void InsertBytes(unsigned char *tx_packet[], int position){}; // Function to insert an arbitrary amount of bytes at position in array
+    void PacketConstructor(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
+                           unsigned char *params){};
+    void TransmitPacket(unsigned char *tx_packet){}; // Function to send a package
+    void ReceiveStatusPacket(){}; // Function to read the contents of received packages
 public:
-    void ping(){};
     // SETTERS
     void setTorqueEnable(){};
     // GETTERS
     void getTorqueEnable(){};
 
 };
-
-
 #endif //DYNAMIXEL_P2_DYNAMIXEL_P2_H
 
 void initSettings (){ //Initializes preferred settings for all Dynamixel servos.
