@@ -3,9 +3,7 @@
 #ifndef DYNAMIXEL_P2_DYNAMIXEL_P2_H
 #define DYNAMIXEL_P2_DYNAMIXEL_P2_H
 
-
-// Define addresses
-#define torque_enable 0
+#include <Arduino.h>
 
 #include <iostream>
 #include <iomanip>
@@ -22,14 +20,18 @@ using namespace std;
 
 class Dynamixel_p2 {
 private:
-    void CreateblkSize (unsigned char instruction, unsigned char address){};
+    // ATTRIBUTES
+    Stream *_serialport;
+    int _flow_control_pin = 13;
+    // METHODS
+    
     void CreateHeader(unsigned char *tx_packet){}; // Function to build header (FF FF FD 00)
     void CreateId(unsigned char *tx_packet, unsigned char id){}; // Function to add ID to package
     unsigned char CreateInstruction(unsigned char *tx_packet unsigned char instruction, unsigned char parameters){};
     int CreateLength(unsigned char *tx_packet int parameters_size){};
     //void InsertBytes(unsigned char *tx_packet[], int position){}; // Function to insert an arbitrary amount of bytes at position in array
-    void PacketConstructor(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
-                           unsigned char *params){};
+    void ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
+                         unsigned char *params){}; // Function that constructs packets, given id, instr, and parameters
     void TransmitPacket(unsigned char *tx_packet){}; // Function to send a package
     void ReceiveStatusPacket(){}; // Function to read the contents of received packages
 
@@ -38,11 +40,12 @@ private:
     void Create4Params (unsigned long value, unsigned char *package, unsigned char startParameters); // Function designed to split up a 32 Bit value in a 4x8 bit array.
     void Create2Params (unsigned long value, unsigned char *package, unsigned char startParameters); // 16it to 2x8 bit.
 public:
+    // UTILITY
+    Dynamixel_p2(int flow_control_pin = 13){};
+    void begin(long baud_rate = 57600){};
     // SETTERS
     void setTorqueEnable(){};
     // GETTERS
     void getTorqueEnable(){};
-
 };
 #endif //DYNAMIXEL_P2_DYNAMIXEL_P2_H
-
