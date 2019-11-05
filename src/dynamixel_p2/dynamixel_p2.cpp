@@ -1,15 +1,26 @@
 // Created by 19gr362 Aalborg University, Robotics third semester.
 #include "dynamixel_p2.h"
 
-
-
-int main (){
-
-
-
-
-    return 0;
+// CONSTRUCTOR
+Dynamixel_p2::Dynamixel_p2(int flow_control_pin = 13)
+{
+    _flow_control_pin = flow_control_pin;
+    pinMode(_flow_control_pin, OUTPUT);
 }
+
+// PUBLIC METHODS
+// Following method written by TODO: Insert original author
+void Dynamixel_p2::begin(long baud_rate = 57600)
+{
+#if defined(__AVR_ATmega32U4__) || defined(__MK20DX128__) || defined(__AVR_ATmega2560__)
+    Serial1.begin(baud_rate);  // Set up Serial for Leonardo and Mega
+    _serialport = &Serial1;
+#else
+    Serial.begin(baud_rate);   // Set up Serial for all others (Uno, etc)
+    _serialport = &Serial;
+#endif
+}
+
 // PRIVATE METHODS
 
 void Dynamixel_p2::CreateHeader(unsigned char *tx_packet)
@@ -38,11 +49,11 @@ void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char ins
 
 int Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameters_size)
 {
-    unsigned char length1, length2 = 0x00;
-    int packet_length = parameters_size + 10;
+    int packet_length = parameters_size + 3;
+    unsigned char length1 = packet_length & 0xFF;
+    unsigned char length2 = 0x00;
     if (packet_length > 0xFF)
     {
-        length1 = packet_length & 0xFF;
         length2 = (packet_length >> 8) & 0xFF;
     }
     tx_packet[5] = length1;
@@ -50,22 +61,27 @@ int Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameter
     return packet_length;
 }
 
-void Dynamixel_p2::PacketConstructor(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
+void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
                                      unsigned char *params)
 {
     CreateHeader(tx_packet);
     CreateId(tx_packet, device_id);
     CreateInstruction(tx_packet, instruction, params);
     int packet_length = CreateLength(tx_packet, sizeof(params));
-
+    // TODO: Add CRC
 }
 
 void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
 {
-    for (int i = 0; i < ((tx_packet[6] << 8) + tx_packet[5]); ++i) // TODO: Move length calculation elsewhere
-    {
+    digitalWrite(_flow_control_pin, HIGH);
+    int bytes_in_packet = (tx_packet[6] << 8) + tx_packet[5] + 7;
 
+    for (int i = 0; i < bytes_in_packet; i++)
+    {
+        _serialport->write(tx_packet[i]);
     }
+    _serialport->flush();
+    digitalWrite(_flow_control_pin, LOW);
 }
 
 unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size)
@@ -131,7 +147,7 @@ void uint32to8 (unsigned long long value, unsigned char *package, unsigned char 
     }
 }
 
-void unint16to8 (unsigned long value, unsigned char *package, unsigned char startParameters){ // Function split 16 bit value into 2x8 bit array.
+void uint16to8 (unsigned long value, unsigned char *package, unsigned char startParameters){ // Function split 16 bit value into 2x8 bit array.
     for (int i = 0; i < 2; i++){ // Repeats twice.
         package[i+startParameters] = value & 0x00FF; // Runs bitmask over 16bit value to 8bit.
         value = value >> 8; // Bitshifts value by 8 bits to the right.
