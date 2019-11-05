@@ -24,7 +24,7 @@ private:
     Stream *_serialport;
     int _flow_control_pin = 13;
     // METHODS
-    
+    unsigned char Dynamixel_p2::CreateblkSize (unsigned char instruction, unsigned char address){};
     void CreateHeader(unsigned char *tx_packet){}; // Function to build header (FF FF FD 00)
     void CreateId(unsigned char *tx_packet, unsigned char id){}; // Function to add ID to package
     unsigned char CreateInstruction(unsigned char *tx_packet unsigned char instruction, unsigned char parameters){};
