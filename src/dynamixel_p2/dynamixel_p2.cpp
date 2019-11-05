@@ -184,7 +184,7 @@ unsigned short Dynamixel_p2::data_blk_size(unsigned char *packet) { //Not finish
     return data_blk_size;
 }
 
-void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *package, unsigned char startParameters){ // Function to split 32 bit value into 4x8 bit array.
+void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *package){ // Function to split 32 bit value into 4x8 bit array.
     package[4];
     for (int i = 0; i<4; i++){ // Repeats 4 times.
         package[i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
