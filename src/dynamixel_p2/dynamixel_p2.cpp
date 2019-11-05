@@ -23,6 +23,51 @@ void Dynamixel_p2::begin(long baud_rate = 57600)
 
 // PRIVATE METHODS
 
+unsigned char Dynamixel_p2::CreateblkSize (unsigned char instruction, unsigned char address){ // TODO Convert if else structure to switch for better processing
+    unsigned char blkSize = 0;
+    if (instruction == 0x01 || 0x05 || 0x08){ // If it's a ping, action or Reboot
+        blkSize = 10; // This is always the case for pings, action and Reboot
+    }
+
+    if (instruction == 0x02){ // If it's a read
+        blkSize = 14; // Always the case for a read.
+    }
+
+    if (instruction == 0x03 || 0x04) { // If it's a write or reg write
+        blkSize = 10 + prefBytes[address] + 2; // 10 Always present bytes plus x prefBytes plus 2 CRC. Pref bytes for torque_enable is 1.
+    }
+
+    if (instruction == 0x06){ // Factory reset
+        blkSize = 11;
+    }
+
+
+    if (instruction == 0x10){ // Clear
+        blkSize = 15;
+    }
+
+    if (instruction == 0x55){ // Status(return)
+
+    }
+
+    if (instruction == 0x82){ // Sync read
+
+    }
+
+    if (instruction == 0x83){ // Sync write
+
+    }
+
+    if (instruction == 0x92){ // Bulk read
+
+    }
+
+    if (instruction == 0x93){ // Bulk write
+
+    }
+    return blkSize;
+};
+
 void Dynamixel_p2::CreateHeader(unsigned char *tx_packet)
 {
     tx_packet[0] = 0xFF;
@@ -37,6 +82,7 @@ void Dynamixel_p2::CreateId(unsigned char *tx_packet, unsigned char id)
     return
 }
 
+
 void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char instruction, unsigned char *parameters)
 {
     tx_packet[7] = instruction;
@@ -47,7 +93,7 @@ void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char ins
     }
 }
 
-int Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameters_size)
+int Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameters_size) // Todo, once we know the instruction we know if we need address. If we do we can look up how many bytes is needed.
 {
     int packet_length = parameters_size + 3;
     unsigned char length1 = packet_length & 0xFF;
@@ -84,7 +130,7 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
     digitalWrite(_flow_control_pin, LOW);
 }
 
-unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size)
+unsigned short Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size)
 {
     unsigned short i, j;
     unsigned short crc_table[256] = {
@@ -131,27 +177,29 @@ unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr,
     return crc_accum;
 }
 
-unsigned short data_blk_size(unsigned char *packet) { //Not finished we need length of 1 and 2. In case of long packets
+unsigned short Dynamixel_p2::data_blk_size(unsigned char *packet) { //Not finished we need length of 1 and 2. In case of long packets
     // There is no point in considering Length 2, since no RAM addresses are above 255.
     unsigned short data_blk_size = packet[5] + 5;
     cout << "Length1: " << int (data_blk_size) << endl;
     return data_blk_size;
 }
 
-
-void uint32to8 (unsigned long long value, unsigned char *package, unsigned char startParameters){ // Function to split 32 bit value into 4x8 bit array.
+void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *package){ // Function to split 32 bit value into 4x8 bit array.
+    package[4];
     for (int i = 0; i<4; i++){ // Repeats 4 times.
-        package[i+startParameters] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        package[i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
         value = value >> 8; //Bitshift value by 8 bits to the right.
-        cout << package << endl; //  TEST PRINT REMOVE LATER
     }
 }
 
-void uint16to8 (unsigned long value, unsigned char *package, unsigned char startParameters){ // Function split 16 bit value into 2x8 bit array.
+void Dynamixel_p2::Create2Params (unsigned long value, unsigned char *package){ // Function split 16 bit value into 2x8 bit array.
+    package[2];
     for (int i = 0; i < 2; i++){ // Repeats twice.
-        package[i+startParameters] = value & 0x00FF; // Runs bitmask over 16bit value to 8bit.
+        package[i] = value & 0x00FF; // Runs bitmask over 16bit value to 8bit.
         value = value >> 8; // Bitshifts value by 8 bits to the right.
-        cout << package[i] << endl; // TEST PRINT REMOVE LATER
     }
+}
 
+void Dynamixel_p2::Create1Params (unsigned long value, unsigned char *package){ // Function split 8 bit value into 1x8 bit array.
+        package[1] = value & 0x00FF; // Runs bitmask over 8bit value to 8bit.
 }
