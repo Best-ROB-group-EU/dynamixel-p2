@@ -93,7 +93,7 @@ void Dynamixel_p2::CreateId(unsigned char *tx_packet, unsigned char id)
 }
 
 
-void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char instruction, unsigned char *parameters)
+void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char instruction) // Parameters moved to CreateXParams
 {
     tx_packet[7] = instruction;
 }
@@ -269,6 +269,7 @@ unsigned short Dynamixel_p2::data_blk_size(unsigned char *packet) { //Not finish
 
 void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *package, unsigned char address){ // Function to split 32 bit value into 4x8 bit array.
     package[8] = address; //Adds low order byte address
+    package[9] = 0x00;
     for (int i = 0; i<4; i++){ // Repeats 4 times.
         package[10+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
         value = value >> 8; //Bitshift value by 8 bits to the right.
@@ -277,13 +278,15 @@ void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *packa
 
 void Dynamixel_p2::Create2Params (unsigned long value, unsigned char *package, unsigned char address){ // Function split 16 bit value into 2x8 bit array.
     package[8] = address; // Adds low order byte address
+    package[9] = 0x00;
     for (int i = 0; i < 2; i++){ // Repeats twice.
         package[10+i] = value & 0x00FF; // Runs bitmask over 16bit value to 8bit.
         value = value >> 8; // Bitshifts value by 8 bits to the right.
     }
 }
 
-void Dynamixel_p2::Create1Params (unsigned long value, unsigned char *package, unsigned char address){ // Function split 8 bit value into 1x8 bit array.
-        package[10+1] = value & 0x00FF;// Runs bitmask over 8bit value to 8bit.
+void Dynamixel_p2::Create1Params (unsigned char value, unsigned char *package, unsigned char address){ // Function split 8 bit value into 1x8 bit array.
+        package[10] = value & 0xFF;// Runs bitmask over 8bit value to 8bit.
         package[8] = address; // Adds low order byte address.
+        package[9] = 0x00;
 }
