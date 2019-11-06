@@ -30,17 +30,18 @@ private:
     void CreateHeader(unsigned char *tx_packet){}; // Function to build header (FF FF FD 00)
     void CreateId(unsigned char *tx_packet, unsigned char id){}; // Function to add ID to package
     unsigned char CreateInstruction(unsigned char *tx_packet unsigned char instruction, unsigned char parameters){};
-    int CreateLength(unsigned char *tx_packet int parameters_size){};
+    unsigned short CreateLength(unsigned char *tx_packet int parameters_size){};
     //void InsertBytes(unsigned char *tx_packet[], int position){}; // Function to insert an arbitrary amount of bytes at position in array
     void ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
-                         unsigned char *params){}; // Function that constructs packets, given id, instr, and parameters
+                         unsigned char *params, unsigned char address){}; // Function that constructs packets, given id, instr, and parameters
     void TransmitPacket(unsigned char *tx_packet){}; // Function to send a package
     void ReceiveStatusPacket(){}; // Function to read the contents of received packages
 
-    unsigned short update_crc (unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size); // Calculates CRC
+    unsigned short update_crc (unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size){}; // Calculates CRC
     unsigned short data_blk_size(unsigned char *packet); // Calculates the block size for use in CRC Calculation
-    void Create4Params (unsigned long value, unsigned char *package, unsigned char startParameters); // Function designed to split up a 32 Bit value in a 4x8 bit array.
-    void Create2Params (unsigned long value, unsigned char *package, unsigned char startParameters); // 16it to 2x8 bit.
+    void Create4Params (unsigned long value, unsigned char *package, unsigned char address){}; // Function designed to split up a 32 Bit value in a 4x8 bit array.
+    void Create2Params (unsigned long value, unsigned char *package, unsigned char address){}; // 16it to 2x8 bit.
+    void Create1Params (unsigned long value, unsigned char *package, unsigned char address){};
 public:
     // UTILITY
     Dynamixel_p2(int flow_control_pin = 13){};

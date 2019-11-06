@@ -8,7 +8,18 @@ Dynamixel_p2::Dynamixel_p2(int flow_control_pin = 13)
     pinMode(_flow_control_pin, OUTPUT);
 }
 
-// PUBLIC METHODS
+// PUBLIC
+void Dynamixel_p2::setTorqueEnable(bool state, unsigned char ID){
+    unsigned char setPkg [14];
+    unsigned char paramPkg[1];
+    Dynamixel_p2::CreateHeader(setPkg);
+    Dynamixel_p2::CreateId(setPkg, ID);
+    Dynamixel_p2::Create1Params(1,paramPkg);
+    Dynamixel_p2::CreateLength(setPkg, 1);
+    Dynamixel_p2::CreateInstruction(setPkg, WRITE, paramPkg);
+}
+
+
 // Following method written by TODO: Insert original author
 void Dynamixel_p2::begin(long baud_rate = 57600)
 {
@@ -86,16 +97,11 @@ void Dynamixel_p2::CreateId(unsigned char *tx_packet, unsigned char id)
 void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char instruction, unsigned char *parameters)
 {
     tx_packet[7] = instruction;
-
-    for (int i = 0; i < sizeof(parameters) ; ++i)
-    {
-        tx_packet[8+i] = parameters[i];
-    }
 }
 
-int Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameters_size) // Todo, once we know the instruction we know if we need address. If we do we can look up how many bytes is needed.
+unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char *parameters)
 {
-    int packet_length = parameters_size + 3;
+    int packet_length = sizeof(parameters) + 3;
     unsigned char length1 = packet_length & 0xFF;
     unsigned char length2 = 0x00;
     if (packet_length > 0xFF)
@@ -108,19 +114,19 @@ int Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameter
 }
 
 void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
-                                     unsigned char *params)
+                                     unsigned char *params, unsigned char address)
 {
     CreateHeader(tx_packet);
     CreateId(tx_packet, device_id);
     CreateInstruction(tx_packet, instruction, params);
-    int packet_length = CreateLength(tx_packet, sizeof(params));
+    unsigned short packet_length = CreateLength(tx_packet, sizeof(params));
     // TODO: Add CRC
 }
 
 void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
 {
     digitalWrite(_flow_control_pin, HIGH);
-    int bytes_in_packet = (tx_packet[6] << 8) + tx_packet[5] + 7;
+    unsigned short bytes_in_packet = (tx_packet[6] << 8) + tx_packet[5] + 7;
 
     for (int i = 0; i < bytes_in_packet; i++)
     {
@@ -184,22 +190,23 @@ unsigned short Dynamixel_p2::data_blk_size(unsigned char *packet) { //Not finish
     return data_blk_size;
 }
 
-void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *package){ // Function to split 32 bit value into 4x8 bit array.
-    package[4];
+void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *package, unsigned char address){ // Function to split 32 bit value into 4x8 bit array.
+    package[8] = address; //Adds low order byte address
     for (int i = 0; i<4; i++){ // Repeats 4 times.
-        package[i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        package[10+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
         value = value >> 8; //Bitshift value by 8 bits to the right.
     }
 }
 
-void Dynamixel_p2::Create2Params (unsigned long value, unsigned char *package){ // Function split 16 bit value into 2x8 bit array.
-    package[2];
+void Dynamixel_p2::Create2Params (unsigned long value, unsigned char *package, unsigned char address){ // Function split 16 bit value into 2x8 bit array.
+    package[8] = address; // Adds low order byte address
     for (int i = 0; i < 2; i++){ // Repeats twice.
-        package[i] = value & 0x00FF; // Runs bitmask over 16bit value to 8bit.
+        package[10+i] = value & 0x00FF; // Runs bitmask over 16bit value to 8bit.
         value = value >> 8; // Bitshifts value by 8 bits to the right.
     }
 }
 
-void Dynamixel_p2::Create1Params (unsigned long value, unsigned char *package){ // Function split 8 bit value into 1x8 bit array.
-        package[1] = value & 0x00FF; // Runs bitmask over 8bit value to 8bit.
+void Dynamixel_p2::Create1Params (unsigned long value, unsigned char *package, unsigned char address){ // Function split 8 bit value into 1x8 bit array.
+        package[10+1] = value & 0x00FF;// Runs bitmask over 8bit value to 8bit.
+        package[8] = address; // Adds low order byte address.
 }
