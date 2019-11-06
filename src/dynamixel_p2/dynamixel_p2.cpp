@@ -113,11 +113,15 @@ unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned cha
 }
 
 void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
-                                     unsigned char *params, unsigned char address)
+                                     unsigned long long params, unsigned char address)
 {
     CreateHeader(tx_packet);
     CreateId(tx_packet, device_id);
-    CreateInstruction(tx_packet, instruction, params);
+    CreateInstruction(tx_packet, instruction);
+    ChooseParams(params, address);
+
+
+
     unsigned short packet_length = CreateLength(tx_packet, sizeof(params));
     // TODO: Add CRC
 }
@@ -289,4 +293,20 @@ void Dynamixel_p2::Create1Params (unsigned char value, unsigned char *package, u
         package[10] = value & 0xFF;// Runs bitmask over 8bit value to 8bit.
         package[8] = address; // Adds low order byte address.
         package[9] = 0x00;
+}
+
+void Dynamixel_p2::ChooseParams(unsigned long long value, unsigned char address, unsigned char *tx_packet){ // Takes a parameter and an address. Figures out how many bytes is needed.
+    for (int i = 0; i<27; i++){
+        if (addresses[i] == address){
+            switch (prefBytes[i])
+            {
+                case 1: Create1Params(value, tx_packet, address);
+                    break;
+                case 2: Create2Params(value, tx_packet, address);
+                    break;
+                case 4: Create4Params(value, tx_packet, address);
+                    break;
+            }
+        }
+    }
 }
