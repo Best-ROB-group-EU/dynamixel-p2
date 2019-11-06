@@ -1,9 +1,10 @@
 // Created by 19gr362 Aalborg University, Robotics third semester.
+#ifndef DYNAMIXEL_P2_DYNAMIXEL_P2_H
+#define DYNAMIXEL_P2_DYNAMIXEL_P2_H
+
 #define WRITE 0x03
 #define READ 0x02
 #define PING 0x01
-#ifndef DYNAMIXEL_P2_DYNAMIXEL_P2_H
-#define DYNAMIXEL_P2_DYNAMIXEL_P2_H
 
 #include <Arduino.h>
 
