@@ -79,7 +79,6 @@ void Dynamixel_p2::CreateHeader(unsigned char *tx_packet)
 void Dynamixel_p2::CreateId(unsigned char *tx_packet, unsigned char id)
 {
     tx_packet[4] = id;
-    return
 }
 
 
@@ -93,7 +92,7 @@ void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char ins
     }
 }
 
-int Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameters_size) // Todo, once we know the instruction we know if we need address. If we do we can look up how many bytes is needed.
+unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char parameters_size) // Todo, once we know the instruction we know if we need address. If we do we can look up how many bytes is needed.
 {
     int packet_length = parameters_size + 3;
     unsigned char length1 = packet_length & 0xFF;
@@ -113,14 +112,14 @@ void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char devic
     CreateHeader(tx_packet);
     CreateId(tx_packet, device_id);
     CreateInstruction(tx_packet, instruction, params);
-    int packet_length = CreateLength(tx_packet, sizeof(params));
+    unsigned short packet_length = CreateLength(tx_packet, sizeof(params));
     // TODO: Add CRC
 }
 
 void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
 {
     digitalWrite(_flow_control_pin, HIGH);
-    int bytes_in_packet = (tx_packet[6] << 8) + tx_packet[5] + 7;
+    unsigned short bytes_in_packet = (tx_packet[6] << 8) + tx_packet[5] + 7;
 
     for (int i = 0; i < bytes_in_packet; i++)
     {
@@ -128,6 +127,84 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
     }
     _serialport->flush();
     digitalWrite(_flow_control_pin, LOW);
+}
+
+status_packet_info Dynamixel_p2::ReceiveStatusPacket()
+{
+    // DOUBLE SERIALPORT->AVAILABLE() CHECK: First one checks if there is anything
+    // available to lock the program, making sure that nothing else happens while
+    // reading. Second check does the actual reading when enough data is present.
+    // 11 bytes is header + id + length + instr + err + crc.
+    // Any parameters received in the meantime
+    while (_serialport->available())
+    {
+        // TODO: Add a timeout that breaks the first loop if received data never exceeds 11 bytes
+        while (_serialport->available() >= 11)
+        {
+            Dynamixel_p2::status_packet_info status;
+
+            // Get rid of the header
+            for (int i = 0; i < 2; ++i) {
+                if (_serialport->peek() == 0xFF) {
+                    _serialport->read();
+                }
+                else{
+                    status.error = 0x08; // 0x08 is not defined in the protocol. Consider it an unknown error.
+                    return status
+                }
+            }
+
+            if (_serialport->peek() == 0xFD){
+                _serialport->read();
+            }
+            else{
+                status.error = 0x08;
+                return status
+            }
+
+            if (_serialport->peek() == 0x00){
+                _serialport->read();
+            }
+            else{
+                status.error = 0x08;
+                return status
+            }
+
+            // Get ID, length
+            unsigned char id = _serialport->read();
+            unsigned char l1 = _serialport->read();
+            unsigned char l2 = _serialport->read();
+            unsigned short packet_length = l1 + (l2 << 8);
+            status.id = id;
+
+            // Recreate RX-packet
+            unsigned char rx_packet[packet_length+7];
+            rx_packet[0] = 0xFF;
+            rx_packet[1] = 0xFF;
+            rx_packet[2] = 0xFD;
+            rx_packet[3] = 0x00;
+            rx_packet[4] = id;
+            rx_packet[5] = l1;
+            rx_packet[6] = l2;
+
+            // Populate the rest of the packet with instr, err, params, crc
+            for (int j = 0; j < packet_length; ++j) {
+                rx_packet[i+7] = _serialport->read();
+            }
+
+            // Set error in return value
+            status.error = rx_packet[8];
+
+            // Extract parameters
+            for (int k = 0; k < packet_length-4; ++k) {
+                status.parameters[k] = rx_packet[9+k];
+            }
+
+            // TODO: Calculate CRC of status packet
+
+            return status;
+        }
+    }
 }
 
 unsigned short Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size)
