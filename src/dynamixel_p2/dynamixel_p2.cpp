@@ -83,7 +83,9 @@ void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char devic
     CreateHeader(tx_packet);
     CreateId(tx_packet, device_id);
     CreateInstruction(tx_packet, instruction);
-    ChooseParams(params, address, tx_packet);
+    unsigned char blk_size = ChooseParams(params, address, tx_packet);
+    CreateLength(tx_packet, blk_size);
+    CreateCRC(tx_packet, blk_size);
 }
 
 void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
@@ -250,21 +252,19 @@ void Dynamixel_p2::Create1Params (unsigned char value, unsigned char *package, u
         package[9] = 0x00;
 }
 
-void Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet){ // Takes a parameter and an address. Figures out how many bytes is needed.
-    for (int i = 0; i<27; i++){
+unsigned char Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet){ // Takes a parameter and an address. Figures out how many bytes is needed.
+    for (int i = 0; i<30; i++){
         if (addresses[i] == address){
             switch (prefBytes[i]) {
                 case 1:
                     Create1Params((unsigned char) value, tx_packet, address);
-                    break;
+                    return 1;
                 case 2:
                     Create2Params((unsigned int) value, tx_packet, address);
-                    break;
+                    return 2;
                 case 4:
                     Create4Params(value, tx_packet, address);
-                    CreateLength(tx_packet,14);
-                    CreateCRC(tx_packet, 14);
-                    break;
+                    return 4;
             }
         }
     }
@@ -275,4 +275,3 @@ void Dynamixel_p2::CreateCRC(unsigned char *tx_packet, unsigned short blk_size){
     tx_packet[blk_size] = (cal_crc & 0x00FF);
     tx_packet[blk_size+1] = (cal_crc >> 8) & 0x00FF;
 }
-
