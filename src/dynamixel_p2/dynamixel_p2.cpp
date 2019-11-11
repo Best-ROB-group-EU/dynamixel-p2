@@ -1,27 +1,33 @@
 // Created by 19gr362 Aalborg University, Robotics third semester.
 #include "dynamixel_p2.h"
 
+// Contains adresses of the RAM control table
+unsigned char addresses[30] = {64,65,68,69,70,76,78,80,82,84,88,90,98,100,102,104,108,112,116,120,122,123,124,126,128,132,136,140,144,146};
+// Contains the expected amount of Bytes to the addresses.
+unsigned char prefBytes[30] = {1,1,1,1,1,2,2,2,2,2,2,2,1,2,2,4,4,4,4,2,1,1,2,2,4,4,4,4,2,1};
+// Holds instructions
+unsigned char instructions[13] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x10, 0x55, 0x82, 0x83, 0x92, 0x93};
+// Holds the beginning of parameters for those instructions.
+unsigned char firstParameter[13] = {0, 10, 10, 10, 0, 8, 0, 0};
+
+
 // CONSTRUCTOR
-Dynamixel_p2::Dynamixel_p2(int flow_control_pin = 13)
+Dynamixel_p2::Dynamixel_p2(int flow_control_pin)
 {
     _flow_control_pin = flow_control_pin;
     pinMode(_flow_control_pin, OUTPUT);
 }
 
 // PUBLIC
-void Dynamixel_p2::setTorqueEnable(bool state, unsigned char ID){
-    unsigned char setPkg [14];
-    unsigned char paramPkg[1];
-    Dynamixel_p2::CreateHeader(setPkg);
-    Dynamixel_p2::CreateId(setPkg, ID);
-    Dynamixel_p2::Create1Params(1,paramPkg);
-    Dynamixel_p2::CreateLength(setPkg, 1);
-    Dynamixel_p2::CreateInstruction(setPkg, WRITE, paramPkg);
+
+void Dynamixel_p2::setGoalPosition(unsigned char ID, unsigned long value){
+    unsigned char GoalPkg[16];
+   // Dynamixel_p2::ConstructPacket(GoalPkg, ID, 0x03, value, 0x74);
 }
 
 
 // Following method written by TODO: Insert original author
-void Dynamixel_p2::begin(long baud_rate = 57600)
+void Dynamixel_p2::begin(long baud_rate)
 {
 #if defined(__AVR_ATmega32U4__) || defined(__MK20DX128__) || defined(__AVR_ATmega2560__)
     Serial1.begin(baud_rate);  // Set up Serial for Leonardo and Mega
@@ -33,51 +39,6 @@ void Dynamixel_p2::begin(long baud_rate = 57600)
 }
 
 // PRIVATE METHODS
-
-unsigned char Dynamixel_p2::CreateblkSize (unsigned char instruction, unsigned char address){ // TODO Convert if else structure to switch for better processing
-    unsigned char blkSize = 0;
-    if (instruction == 0x01 || 0x05 || 0x08){ // If it's a ping, action or Reboot
-        blkSize = 10; // This is always the case for pings, action and Reboot
-    }
-
-    if (instruction == 0x02){ // If it's a read
-        blkSize = 14; // Always the case for a read.
-    }
-
-    if (instruction == 0x03 || 0x04) { // If it's a write or reg write
-        blkSize = 10 + prefBytes[address] + 2; // 10 Always present bytes plus x prefBytes plus 2 CRC. Pref bytes for torque_enable is 1.
-    }
-
-    if (instruction == 0x06){ // Factory reset
-        blkSize = 11;
-    }
-
-
-    if (instruction == 0x10){ // Clear
-        blkSize = 15;
-    }
-
-    if (instruction == 0x55){ // Status(return)
-
-    }
-
-    if (instruction == 0x82){ // Sync read
-
-    }
-
-    if (instruction == 0x83){ // Sync write
-
-    }
-
-    if (instruction == 0x92){ // Bulk read
-
-    }
-
-    if (instruction == 0x93){ // Bulk write
-
-    }
-    return blkSize;
-};
 
 void Dynamixel_p2::CreateHeader(unsigned char *tx_packet)
 {
@@ -98,9 +59,9 @@ void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char ins
     tx_packet[7] = instruction;
 }
 
-unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned char *parameters)
+unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned short blk_size)
 {
-    int packet_length = sizeof(parameters) + 3;
+    unsigned short packet_length = 10 + 3; // TODO: Sizeof removed and replaced with 10.
     unsigned char length1 = packet_length & 0xFF;
     unsigned char length2 = 0x00;
     if (packet_length > 0xFF)
@@ -113,17 +74,15 @@ unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned cha
 }
 
 void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
-                                     unsigned long long params, unsigned char address)
+                                     unsigned long params, unsigned char address)
 {
     CreateHeader(tx_packet);
     CreateId(tx_packet, device_id);
     CreateInstruction(tx_packet, instruction);
-    ChooseParams(params, address);
-
-
+    ChooseParams(params, address, tx_packet);
 
     unsigned short packet_length = CreateLength(tx_packet, sizeof(params));
-    // TODO: Add CRC
+
 }
 
 void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
@@ -138,8 +97,8 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
     _serialport->flush();
     digitalWrite(_flow_control_pin, LOW);
 }
-
-status_packet_info Dynamixel_p2::ReceiveStatusPacket()
+// TODO: Uncomment later
+/* struct status_packet_info Dynamixel_p2::ReceiveStatusPacket()
 {
     // DOUBLE SERIALPORT->AVAILABLE() CHECK: First one checks if there is anything
     // available to lock the program, making sure that nothing else happens while
@@ -151,7 +110,7 @@ status_packet_info Dynamixel_p2::ReceiveStatusPacket()
         // TODO: Add a timeout that breaks the first loop if received data never exceeds 11 bytes
         while (_serialport->available() >= 11)
         {
-            Dynamixel_p2::status_packet_info status;
+            Dynamixel_p2::struct status_packet_info status;
 
             // Get rid of the header
             for (int i = 0; i < 2; ++i) {
@@ -215,7 +174,7 @@ status_packet_info Dynamixel_p2::ReceiveStatusPacket()
             return status;
         }
     }
-}
+} */
 
 unsigned short Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size)
 {
@@ -267,11 +226,11 @@ unsigned short Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char 
 unsigned short Dynamixel_p2::data_blk_size(unsigned char *packet) { //Not finished we need length of 1 and 2. In case of long packets
     // There is no point in considering Length 2, since no RAM addresses are above 255.
     unsigned short data_blk_size = packet[5] + 5;
-    cout << "Length1: " << int (data_blk_size) << endl;
+//    cout << "Length1: " << int (data_blk_size) << endl;
     return data_blk_size;
 }
 
-void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *package, unsigned char address){ // Function to split 32 bit value into 4x8 bit array.
+void Dynamixel_p2::Create4Params (unsigned long value, unsigned char *package, unsigned char address){ // Function to split 32 bit value into 4x8 bit array.
     package[8] = address; //Adds low order byte address
     package[9] = 0x00;
     for (int i = 0; i<4; i++){ // Repeats 4 times.
@@ -280,7 +239,7 @@ void Dynamixel_p2::Create4Params (unsigned long long value, unsigned char *packa
     }
 }
 
-void Dynamixel_p2::Create2Params (unsigned long value, unsigned char *package, unsigned char address){ // Function split 16 bit value into 2x8 bit array.
+void Dynamixel_p2::Create2Params (unsigned int value, unsigned char *package, unsigned char address){ // Function split 16 bit value into 2x8 bit array.
     package[8] = address; // Adds low order byte address
     package[9] = 0x00;
     for (int i = 0; i < 2; i++){ // Repeats twice.
@@ -295,18 +254,29 @@ void Dynamixel_p2::Create1Params (unsigned char value, unsigned char *package, u
         package[9] = 0x00;
 }
 
-void Dynamixel_p2::ChooseParams(unsigned long long value, unsigned char address, unsigned char *tx_packet){ // Takes a parameter and an address. Figures out how many bytes is needed.
+void Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet){ // Takes a parameter and an address. Figures out how many bytes is needed.
     for (int i = 0; i<27; i++){
         if (addresses[i] == address){
-            switch (prefBytes[i])
-            {
-                case 1: Create1Params(value, tx_packet, address);
+            switch (prefBytes[i]) {
+                case 1:
+                    Create1Params((unsigned char) value, tx_packet, address);
                     break;
-                case 2: Create2Params(value, tx_packet, address);
+                case 2:
+                    Create2Params((unsigned int) value, tx_packet, address);
                     break;
-                case 4: Create4Params(value, tx_packet, address);
+                case 4:
+                    Create4Params(value, tx_packet, address);
+                    CreateCRC(tx_packet, (unsigned short) 14);
+                    CreateLength(tx_packet, (unsigned short) 14);
                     break;
             }
         }
     }
 }
+
+void Dynamixel_p2::CreateCRC(unsigned char *tx_packet, unsigned short blk_size){
+    unsigned short cal_crc = update_crc(0, tx_packet, data_blk_size(tx_packet));
+    tx_packet[blk_size] = (cal_crc & 0x00FF);
+    tx_packet[blk_size+1] = (cal_crc >> 8) & 0x00FF;
+}
+
