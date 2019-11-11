@@ -22,12 +22,12 @@ Dynamixel_p2::Dynamixel_p2(int flow_control_pin)
 
 void Dynamixel_p2::setGoalPosition(unsigned char ID, unsigned long value){
     unsigned char GoalPkg[16];
-   // Dynamixel_p2::ConstructPacket(GoalPkg, ID, 0x03, value, 0x74);
+    Dynamixel_p2::ConstructPacket(GoalPkg, ID, 0x03, value, 0x74);
 }
 
 
 // Following method written by TODO: Insert original author
-void Dynamixel_p2::begin(long baud_rate)
+void Dynamixel_p2::begin(long baud_rate = 57600)
 {
 #if defined(__AVR_ATmega32U4__) || defined(__MK20DX128__) || defined(__AVR_ATmega2560__)
     Serial1.begin(baud_rate);  // Set up Serial for Leonardo and Mega
@@ -97,8 +97,8 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
     _serialport->flush();
     digitalWrite(_flow_control_pin, LOW);
 }
-// TODO: Uncomment later
-/* struct status_packet_info Dynamixel_p2::ReceiveStatusPacket()
+
+  Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket()
 {
     // DOUBLE SERIALPORT->AVAILABLE() CHECK: First one checks if there is anything
     // available to lock the program, making sure that nothing else happens while
@@ -110,7 +110,7 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
         // TODO: Add a timeout that breaks the first loop if received data never exceeds 11 bytes
         while (_serialport->available() >= 11)
         {
-            Dynamixel_p2::struct status_packet_info status;
+            status_packet_info status;
 
             // Get rid of the header
             for (int i = 0; i < 2; ++i) {
@@ -119,7 +119,7 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
                 }
                 else{
                     status.error = 0x08; // 0x08 is not defined in the protocol. Consider it an unknown error.
-                    return status
+                    return status;
                 }
             }
 
@@ -128,7 +128,7 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
             }
             else{
                 status.error = 0x08;
-                return status
+                return status;
             }
 
             if (_serialport->peek() == 0x00){
@@ -136,7 +136,7 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
             }
             else{
                 status.error = 0x08;
-                return status
+                return status;
             }
 
             // Get ID, length
@@ -158,7 +158,7 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
 
             // Populate the rest of the packet with instr, err, params, crc
             for (int j = 0; j < packet_length; ++j) {
-                rx_packet[i+7] = _serialport->read();
+                rx_packet[j+7] = _serialport->read();
             }
 
             // Set error in return value
@@ -174,7 +174,7 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
             return status;
         }
     }
-} */
+}
 
 unsigned short Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size)
 {

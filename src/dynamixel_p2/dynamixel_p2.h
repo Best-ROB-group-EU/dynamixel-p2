@@ -31,8 +31,8 @@ private:
                                        unsigned long params, unsigned char address); // Function that constructs packets, given id, instr, and parameters
     void TransmitPacket(unsigned char *tx_packet); // Function to send a package
     void ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet); // Takes a parameter and an address. Figures out how many bytes is needed.
-    //struct status_packet_info ReceiveStatusPacket(); // Function to read the contents of received packages
-    // TODO: Uncomment struct later
+    status_packet_info ReceiveStatusPacket(); // Function to read the contents of received packages
+
 
     unsigned short update_crc (unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size); // Calculates CRC
     void CreateCRC(unsigned char *tx_packet, unsigned short blk_size);
