@@ -262,8 +262,8 @@ void Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address, unsi
                     break;
                 case 4:
                     Create4Params(value, tx_packet, address);
-                    CreateLength(tx_packet, (unsigned short) 14);
-                    CreateCRC(tx_packet, (unsigned short) 14);
+                    CreateLength(tx_packet,14);
+                    CreateCRC(tx_packet, 14);
                     break;
             }
         }
