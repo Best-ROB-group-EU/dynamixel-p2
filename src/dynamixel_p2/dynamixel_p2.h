@@ -30,7 +30,7 @@ private:
     void ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
                                        unsigned long params, unsigned char address); // Function that constructs packets, given id, instr, and parameters
     void TransmitPacket(unsigned char *tx_packet); // Function to send a package
-    void ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet); // Takes a parameter and an address. Figures out how many bytes is needed.
+    unsigned char ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet); // Takes a parameter and an address. Figures out how many bytes is needed.
     status_packet_info ReceiveStatusPacket(); // Function to read the contents of received packages
 
 
