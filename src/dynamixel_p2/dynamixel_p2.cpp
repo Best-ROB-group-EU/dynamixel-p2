@@ -23,6 +23,10 @@ Dynamixel_p2::Dynamixel_p2(int flow_control_pin)
 void Dynamixel_p2::setGoalPosition(unsigned char ID, unsigned long value){
     unsigned char GoalPkg[16];
     Dynamixel_p2::ConstructPacket(GoalPkg, ID, 0x03, value, 0x74);
+    for (int i = 0; i<16; i++){ // Printing for testing purposes
+        Serial.print(GoalPkg[i],HEX);
+        Serial.print(" ");
+    }
 }
 
 
@@ -59,10 +63,10 @@ void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char ins
     tx_packet[7] = instruction;
 }
 
-unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned short blk_size)
+void Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned short blk_size)
 {
-    unsigned short packet_length = 10 + 3; // TODO: Sizeof removed and replaced with 10.
-    unsigned char length1 = packet_length & 0xFF;
+    unsigned short packet_length = blk_size - (unsigned short) 5;
+    unsigned char length1 = ((unsigned char)packet_length & 0xFF);
     unsigned char length2 = 0x00;
     if (packet_length > 0xFF)
     {
@@ -70,7 +74,7 @@ unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned sho
     }
     tx_packet[5] = length1;
     tx_packet[6] = length2;
-    return packet_length;
+
 }
 
 void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char device_id, unsigned char instruction,
@@ -80,9 +84,6 @@ void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char devic
     CreateId(tx_packet, device_id);
     CreateInstruction(tx_packet, instruction);
     ChooseParams(params, address, tx_packet);
-
-    unsigned short packet_length = CreateLength(tx_packet, sizeof(params));
-
 }
 
 void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet)
@@ -223,12 +224,7 @@ unsigned short Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char 
     return crc_accum;
 }
 
-unsigned short Dynamixel_p2::data_blk_size(unsigned char *packet) { //Not finished we need length of 1 and 2. In case of long packets
-    // There is no point in considering Length 2, since no RAM addresses are above 255.
-    unsigned short data_blk_size = packet[5] + 5;
-//    cout << "Length1: " << int (data_blk_size) << endl;
-    return data_blk_size;
-}
+
 
 void Dynamixel_p2::Create4Params (unsigned long value, unsigned char *package, unsigned char address){ // Function to split 32 bit value into 4x8 bit array.
     package[8] = address; //Adds low order byte address
@@ -266,8 +262,8 @@ void Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address, unsi
                     break;
                 case 4:
                     Create4Params(value, tx_packet, address);
-                    CreateCRC(tx_packet, (unsigned short) 14);
                     CreateLength(tx_packet, (unsigned short) 14);
+                    CreateCRC(tx_packet, (unsigned short) 14);
                     break;
             }
         }
@@ -275,7 +271,7 @@ void Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address, unsi
 }
 
 void Dynamixel_p2::CreateCRC(unsigned char *tx_packet, unsigned short blk_size){
-    unsigned short cal_crc = update_crc(0, tx_packet, data_blk_size(tx_packet));
+    unsigned short cal_crc = update_crc(0, tx_packet, blk_size);
     tx_packet[blk_size] = (cal_crc & 0x00FF);
     tx_packet[blk_size+1] = (cal_crc >> 8) & 0x00FF;
 }
