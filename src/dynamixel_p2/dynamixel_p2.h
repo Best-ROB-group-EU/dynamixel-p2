@@ -22,7 +22,7 @@ private:
         unsigned char parameters[4];
     };
     // METHODS
-    void CreateHeader(unsigned char *tx_packet, unsigned char ID); // Function to build header (FF FF FD 00)
+    void CreateHeader(unsigned char *tx_packet, unsigned char id); // Function to build header (FF FF FD 00)
     void CreateInstruction(unsigned char *tx_packet, unsigned char instruction);
     unsigned short CreateLength(unsigned char *tx_packet, unsigned short blk_size);
     //void InsertBytes(unsigned char *tx_packet[], int position); // Function to insert an arbitrary amount of bytes at position in array
@@ -44,14 +44,14 @@ public:
     // UTILITY
     void begin(long baud_rate);
     void EEPROM(); //Function to setup EEPROM Operation mode to PWM
-    void RAM(); // Function for initial values in the RAM AREA (Gain etc).
+    void RAM(unsigned char id); // Function for initial values in the RAM AREA (Gain etc).
     // SETTERS
+    void NSFW();
     void setTorqueEnable(unsigned char id, unsigned char value);
     void setLedStatus(unsigned char id, unsigned char value);
     void setStatusReturnLevel(unsigned char id, unsigned char value);
     void setVelocityGainI(unsigned char id, unsigned int value);
     void setVelocityGainP(unsigned char id, unsigned int value);
-    void setVelocityGainD(unsigned char id, unsigned int value);
     void setPositionGainD(unsigned char id, unsigned int value);
     void setPositionGainI(unsigned char id, unsigned int value);
     void setPositionGainP(unsigned char id, unsigned int value);
@@ -100,8 +100,8 @@ public:
     unsigned char getTemperature(unsigned char id, unsigned int bytes);
 
     // PING
-    void PingServo(unsigned char ID);
-    void getCurrentPWM(unsigned char ID, unsigned long value);
+    void PingServo(unsigned char id);
+    void getCurrentPWM(unsigned char id, unsigned long value);
     void getTorqueEnable();
     void Expectedparams(unsigned char address, unsigned char *tx_packet);
 
