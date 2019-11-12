@@ -64,8 +64,6 @@ void Dynamixel_p2::CreateHeader(unsigned char *tx_packet, unsigned char ID)
     tx_packet[4] = ID;
 }
 
-
-
 void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char instruction) // Parameters moved to CreateXParams
 {
     tx_packet[7] = instruction;
