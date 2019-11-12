@@ -25,7 +25,7 @@ void Dynamixel_p2::setTorqueEnable(unsigned char ID, unsigned long value){
     Dynamixel_p2::TransmitPacket(TorquePkg);
 }
 
-void Dynamixel_p2::setGoalPosition(unsigned char ID, unsigned long value){
+void Dynamixel_p2::setGoalPosition(unsigned char id, unsigned long value){
     unsigned char GoalPkg[16];
     Dynamixel_p2::ConstructPacket(GoalPkg, ID, 0x03, value, 0x74);
     Dynamixel_p2::TransmitPacket(GoalPkg);
