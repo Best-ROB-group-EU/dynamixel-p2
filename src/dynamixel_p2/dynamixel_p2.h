@@ -45,10 +45,60 @@ public:
     // UTILITY
     void begin(long baud_rate);
     // SETTERS
-    void setTorqueEnable();
-    void setGoalPosition(unsigned char ID, unsigned long value);
+    void setTorqueEnable(unsigned char id, unsigned char value);
+    void setLedStatus(unsigned char id, unsigned char value);
+    void setStatusReturnLevel(unsigned char id, unsigned char value);
+    void setVelocityGainI(unsigned char id, unsigned int value);
+    void setVelocityGainP(unsigned char id, unsigned int value);
+    void setVelocityGainD(unsigned char id, unsigned int value);
+    void setPositionGainD(unsigned char id, unsigned int value);
+    void setPositionGainI(unsigned char id, unsigned int value);
+    void setPositionGainP(unsigned char id, unsigned int value);
+    void setFF2Gain(unsigned char id, unsigned int value);
+    void setFF1Gain(unsigned char id, unsigned int value);
+    void setBusWatchdog(unsigned char id, unsigned char value);
+    void setGoalPwm(unsigned char id, unsigned int value);
+    void setGoalCurrent(unsigned char id, unsigned int value);
+    void setGoalVelocity(unsigned char id, unsigned long value);
+    void setProfileAcceleration(unsigned char id, unsigned long value);
+    void setProfileVelocity(unsigned char id, unsigned long value);
+    void setGoalPosition(unsigned char id, unsigned long value);
+
+    void setAddress(unsigned char id, unsigned int address, unsigned long value);
+
     // GETTERS
-    void getTorqueEnable();
+    unsigned char getTorqueEnable(unsigned char id, unsigned int bytes);
+    unsigned char getLedStatus(unsigned char id, unsigned int bytes);
+    unsigned char getStatusReturnLevel(unsigned char id, unsigned int bytes);
+    unsigned char getRegisteredInstruction(unsigned char id, unsigned int bytes);
+    unsigned char getHardwareError(unsigned char id, unsigned int bytes);
+    unsigned int getVelocityGainI(unsigned char id, unsigned int bytes);
+    unsigned int getVelocityGainP(unsigned char id, unsigned int bytes);
+    unsigned int getVelocityGainD(unsigned char id, unsigned int bytes);
+    unsigned int getPositionGainD(unsigned char id, unsigned int bytes);
+    unsigned int getPositionGainI(unsigned char id, unsigned int bytes);
+    unsigned int getPositionGainP(unsigned char id, unsigned int bytes);
+    unsigned int getFF2Gain(unsigned char id, unsigned int bytes);
+    unsigned int getFF1Gain(unsigned char id, unsigned int bytes);
+    unsigned char getBusWatchdog(unsigned char id, unsigned int bytes);
+    unsigned int getGoalPwm(unsigned char id, unsigned int bytes);
+    unsigned int getGoalCurrent(unsigned char id, unsigned int bytes);
+    unsigned long getGoalVelocity(unsigned char id, unsigned int bytes);
+    unsigned long getProfileAcceleration(unsigned char id, unsigned int bytes);
+    unsigned long getProfileVelocity(unsigned char id, unsigned int bytes);
+    unsigned long getGoalPosition(unsigned char id, unsigned int bytes);
+    unsigned char getMoving(unsigned char id, unsigned int bytes);
+    unsigned char getMovingDetailed(unsigned char id, unsigned int bytes);
+    unsigned int getPresentPwm(unsigned char id, unsigned int bytes);
+    unsigned int getPresentCurrent(unsigned char id, unsigned int bytes);
+    unsigned long getPresentVelocity(unsigned char id, unsigned int bytes);
+    unsigned long getPresentPosition(unsigned char id, unsigned int bytes);
+    unsigned long getVelocityTrajectory(unsigned char id, unsigned int bytes);
+    unsigned long getPositionTrajectory(unsigned char id, unsigned int bytes);
+    unsigned int getPresentInputVoltage(unsigned char id, unsigned int bytes);
+    unsigned char getTemperature(unsigned char id, unsigned int bytes);
+
+    // PING
     void PingServo(unsigned char ID);
 
 };

@@ -20,9 +20,9 @@ Dynamixel_p2::Dynamixel_p2(int flow_control_pin)
 
 // PUBLIC
 
-void Dynamixel_p2::setGoalPosition(unsigned char ID, unsigned long value){
+void Dynamixel_p2::setGoalPosition(unsigned char id, unsigned long value){
     unsigned char GoalPkg[16];
-    Dynamixel_p2::ConstructPacket(GoalPkg, ID, 0x03, value, 0x74);
+    Dynamixel_p2::ConstructPacket(GoalPkg, id, 0x03, value, 0x74);
     for (int i = 0; i<16; i++){ // Printing for testing purposes
         Serial.print(GoalPkg[i],HEX);
         Serial.print(" ");
