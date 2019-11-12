@@ -19,26 +19,33 @@ Dynamixel_p2::Dynamixel_p2(int flow_control_pin)
 }
 
 // PUBLIC
+void Dynamixel_p2::setTorqueEnable(unsigned char ID, unsigned long value){
+    unsigned char TorquePkg[13];
+    Dynamixel_p2::ConstructPacket(TorquePkg, ID, 0x03, value, 0x40);
+    Dynamixel_p2::TransmitPacket(TorquePkg);
+}
 
 void Dynamixel_p2::setGoalPosition(unsigned char ID, unsigned long value){
     unsigned char GoalPkg[16];
     Dynamixel_p2::ConstructPacket(GoalPkg, ID, 0x03, value, 0x74);
-    for (int i = 0; i<16; i++){ // Printing for testing purposes
-        Serial.print(GoalPkg[i],HEX);
-        Serial.print(" ");
-    }
-    Serial.println("");
+    Dynamixel_p2::TransmitPacket(GoalPkg);
 }
 
 void Dynamixel_p2::PingServo(unsigned char ID) {
     unsigned char PingPkg[10];
     Dynamixel_p2::ConstructPacket(PingPkg, ID, 0x01, 0x00, 0x00);
-    //Dynamixel_p2::TransmitPacket(PingPkg);
-    for (int i = 0; i<10; i++){ // Printing for testing purposes
-        Serial.print(PingPkg[i],HEX);
-        Serial.print(" ");
-    }
+    Dynamixel_p2::TransmitPacket(PingPkg);
 }
+
+void Dynamixel_p2::setGoalPWM(unsigned char ID, unsigned long value){
+    unsigned char PWMPkg[14];
+    Dynamixel_p2::ConstructPacket(PWMPkg, ID, 0x03, value, 0x64);
+    Dynamixel_p2::TransmitPacket(PWMPkg);
+
+}
+
+
+
 
 
 // Following method written by TODO: Insert original author
@@ -257,10 +264,6 @@ void Dynamixel_p2::Create3Params (unsigned char value, unsigned char *package, u
         package[9] = 0x00;
 }
 
-void Create0Params (unsigned char value, unsigned char *package, unsigned char address){ // Function for non read/write Pkg
-
-
-}
 
 char Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet){ // Takes a parameter and an address. Figures out how many bytes is needed.
     for (int i = 0; i<31; i++){
@@ -286,4 +289,15 @@ void Dynamixel_p2::CreateCRC(unsigned char *tx_packet, unsigned short blk_size){
     unsigned short cal_crc = update_crc(0, tx_packet, blk_size);
     tx_packet[blk_size] = (cal_crc & 0x00FF);
     tx_packet[blk_size+1] = (cal_crc >> 8) & 0x00FF;
+}
+
+void Dynamixel_p2::Expectedparams(unsigned char address, unsigned char *tx_packet) {
+    tx_packet[8] = address; // Adds low order byte address
+    tx_packet[9] = 0x00;
+    for (int j = 0; j < 31; j++) {
+        if (addresses[j] == address) {
+            tx_packet[10] = prefBytes[j] - 2;
+            tx_packet[11] = 0;
+        }
+    }
 }

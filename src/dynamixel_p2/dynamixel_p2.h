@@ -38,18 +38,23 @@ private:
     void Create6Params (unsigned long value, unsigned char *package, unsigned char address); // Function designed to split up a 32 Bit value in a 4x8 bit array.
     void Create4Params (unsigned int value, unsigned char *package, unsigned char address); // 16it to 2x8 bit.
     void Create3Params (unsigned char value, unsigned char *package, unsigned char address);
-    void Create0Params (unsigned char value, unsigned char *package, unsigned char address); // The case for non read/write functions.
 public:
     // CONSTRUCTORS
     Dynamixel_p2(int flow_control_pin);
     // UTILITY
     void begin(long baud_rate);
+    void EEPROM(); //Function to setup EEPROM Operation mode to PWM
+    void RAM(); // Function for initial values in the RAM AREA (Gain etc).
     // SETTERS
-    void setTorqueEnable();
+    void setTorqueEnable(unsigned char ID, unsigned long value);
+    void setGoalPWM(unsigned char ID, unsigned long value);
     void setGoalPosition(unsigned char ID, unsigned long value);
     // GETTERS
-    void getTorqueEnable();
+    void getCurrentPosition();
     void PingServo(unsigned char ID);
+    void getCurrentPWM(unsigned char ID, unsigned long value);
+    void getTorqueEnable();
+    void Expectedparams(unsigned char address, unsigned char *tx_packet);
 
 };
 #endif //DYNAMIXEL_P2_DYNAMIXEL_P2_H
