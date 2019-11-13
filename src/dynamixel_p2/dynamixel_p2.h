@@ -22,7 +22,7 @@ private:
         unsigned char parameters[4];
     };
     // METHODS
-    void CreateHeader(unsigned char *tx_packet, unsigned char ID); // Function to build header (FF FF FD 00)
+    void CreateHeader(unsigned char *tx_packet, unsigned char id); // Function to build header (FF FF FD 00)
     void CreateInstruction(unsigned char *tx_packet, unsigned char instruction);
     unsigned short CreateLength(unsigned char *tx_packet, unsigned short blk_size);
     //void InsertBytes(unsigned char *tx_packet[], int position); // Function to insert an arbitrary amount of bytes at position in array
@@ -38,19 +38,20 @@ private:
     void Create6Params (unsigned long value, unsigned char *package, unsigned char address); // Function designed to split up a 32 Bit value in a 4x8 bit array.
     void Create4Params (unsigned int value, unsigned char *package, unsigned char address); // 16it to 2x8 bit.
     void Create3Params (unsigned char value, unsigned char *package, unsigned char address);
-    void Create0Params (unsigned char value, unsigned char *package, unsigned char address); // The case for non read/write functions.
 public:
     // CONSTRUCTORS
     Dynamixel_p2(int flow_control_pin);
     // UTILITY
     void begin(long baud_rate);
+    void EEPROM(); //Function to setup EEPROM Operation mode to PWM
+    void RAM(unsigned char id); // Function for initial values in the RAM AREA (Gain etc).
     // SETTERS
+    void NSFW();
     void setTorqueEnable(unsigned char id, unsigned char value);
     void setLedStatus(unsigned char id, unsigned char value);
     void setStatusReturnLevel(unsigned char id, unsigned char value);
     void setVelocityGainI(unsigned char id, unsigned int value);
     void setVelocityGainP(unsigned char id, unsigned int value);
-    void setVelocityGainD(unsigned char id, unsigned int value);
     void setPositionGainD(unsigned char id, unsigned int value);
     void setPositionGainI(unsigned char id, unsigned int value);
     void setPositionGainP(unsigned char id, unsigned int value);
@@ -99,7 +100,10 @@ public:
     unsigned char getTemperature(unsigned char id, unsigned int bytes);
 
     // PING
-    void PingServo(unsigned char ID);
+    void PingServo(unsigned char id);
+    void getCurrentPWM(unsigned char id, unsigned long value);
+    void getTorqueEnable();
+    void Expectedparams(unsigned char address, unsigned char *tx_packet);
 
 };
 #endif //DYNAMIXEL_P2_DYNAMIXEL_P2_H
