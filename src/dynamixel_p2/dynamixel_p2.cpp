@@ -104,7 +104,7 @@ void Dynamixel_p2::setBusWatchdog(unsigned char id, unsigned char value){
 
 void Dynamixel_p2::setGoalPwm(unsigned char id, unsigned int value) {
     unsigned char PWMPkg[14];
-    Dynamixel_p2::ConstructPacket(PWMPkg, id, 0x03, value, 0x64);
+    Dynamixel_p2::ConstructPacket(PWMPkg, id, WRITE, value, 0x64);
     Dynamixel_p2::TransmitPacket(PWMPkg);
 
 }
@@ -138,8 +138,6 @@ void Dynamixel_p2::setGoalPosition(unsigned char id, unsigned long value) {
     Dynamixel_p2::TransmitPacket(GoalPkg);
 }
 
-void Dynamixel_p2::setAddress(unsigned char id, unsigned int address, unsigned long value);
-
 void Dynamixel_p2::NSFW() {
     unsigned char NSFWPkg[16];
     Dynamixel_p2::ConstructPacket(NSFWPkg, 0x03, 0x03, 800, 0x74);
@@ -148,6 +146,126 @@ void Dynamixel_p2::NSFW() {
     Dynamixel_p2::ConstructPacket(NSFWPkg, 0x03, 0x03, 1400, 0x74);
     Dynamixel_p2::TransmitPacket(NSFWPkg);
     delay(500);
+}
+
+unsigned char Dynamixel_p2::getTorqueEnable(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 64);
+}
+
+unsigned char Dynamixel_p2::getLedStatus(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 65);
+}
+
+unsigned char Dynamixel_p2::getStatusReturnLevel(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 68);
+}
+
+unsigned char Dynamixel_p2::getRegisteredInstruction(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 69);
+}
+
+unsigned char Dynamixel_p2::getHardwareError(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 70);
+}
+
+unsigned short Dynamixel_p2::getVelocityGainI(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 76);
+}
+
+unsigned short Dynamixel_p2::getVelocityGainP(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 78);
+}
+
+unsigned short Dynamixel_p2::getPositionGainD(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 80);
+}
+
+unsigned short Dynamixel_p2::getPositionGainI(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 82);
+}
+
+unsigned short Dynamixel_p2::getPositionGainP(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 84);
+}
+
+unsigned short Dynamixel_p2::getFF2Gain(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 88);
+}
+
+unsigned short Dynamixel_p2::getFF1Gain(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 90);
+}
+
+unsigned char Dynamixel_p2::getBusWatchdog(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 98);
+}
+
+unsigned short Dynamixel_p2::getGoalPwm(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 100);
+}
+
+unsigned short Dynamixel_p2::getGoalCurrent(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 102);
+}
+
+unsigned long Dynamixel_p2::getGoalVelocity(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 104);
+}
+
+unsigned long Dynamixel_p2::getProfileAcceleration(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 108);
+}
+
+unsigned long Dynamixel_p2::getProfileVelocity(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 112);
+}
+
+unsigned long Dynamixel_p2::getGoalPosition(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 116);
+}
+
+unsigned short Dynamixel_p2::getRealtimeTick(unsigned char id) {
+    return genericGet<unsigned short>(id, 2, 120);
+}
+
+unsigned char Dynamixel_p2::getMoving(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 122);
+}
+
+unsigned char Dynamixel_p2::getMovingDetailed(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 123);
+}
+
+unsigned short Dynamixel_p2::getPresentPwm(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 124);
+}
+
+unsigned short Dynamixel_p2::getPresentCurrent(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 126);
+}
+
+unsigned long Dynamixel_p2::getPresentVelocity(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 128);
+}
+
+unsigned long Dynamixel_p2::getPresentPosition(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 132);
+}
+
+unsigned long Dynamixel_p2::getVelocityTrajectory(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 136);
+}
+
+unsigned long Dynamixel_p2::getPositionTrajectory(unsigned char id){
+    return genericGet<unsigned long>(id, 4, 140);
+}
+
+unsigned short Dynamixel_p2::getPresentInputVoltage(unsigned char id){
+    return genericGet<unsigned short>(id, 2, 144);
+}
+
+unsigned char Dynamixel_p2::getTemperature(unsigned char id){
+    return genericGet<unsigned char>(id, 1, 146);
 }
 
 
@@ -172,18 +290,19 @@ void Dynamixel_p2::CreateHeader(unsigned char *tx_packet, unsigned char id) {
     tx_packet[4] = id;
 }
 
-void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet,
-                                     unsigned char instruction) // Parameters moved to CreateXParams
+void Dynamixel_p2::CreateInstruction(unsigned char *tx_packet, unsigned char instruction)
 {
     tx_packet[7] = instruction;
 }
 
 unsigned short Dynamixel_p2::CreateLength(unsigned char *tx_packet, unsigned short blk_size) {
-    unsigned short packet_length = blk_size + 3;
+    unsigned short packet_length = blk_size + 3; // Value of length field
     unsigned char length1 = ((unsigned char) packet_length & 0xFF);
-    unsigned char length2 = 0x00;
+    unsigned char length2;
     if (packet_length > 0xFF) {
         length2 = (packet_length >> 8) & 0xFF;
+    } else {
+        length2 = 0x00;
     }
     tx_packet[5] = length1;
     tx_packet[6] = length2;
@@ -201,7 +320,7 @@ void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char devic
 
 void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet) {
     digitalWrite(_flow_control_pin, HIGH);
-    unsigned short bytes_in_packet = (tx_packet[6] << 8) + tx_packet[5] + 7; // +7 is Header + CRC
+    unsigned short bytes_in_packet = (tx_packet[6] << 8) + tx_packet[5] + 7; // +7 is Header + Length field
 
     for (int i = 0; i < bytes_in_packet; i++) {
         _serialport->write(tx_packet[i]);
@@ -210,17 +329,16 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet) {
     digitalWrite(_flow_control_pin, LOW);
 }
 
-Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
-    // DOUBLE SERIALPORT->AVAILABLE() CHECK: First one checks if there is anything
-    // available to lock the program, making sure that nothing else happens while
-    // reading. Second check does the actual reading when enough data is present.
-    // 11 bytes is header + id + length + instr + err + crc.
-    // Any parameters received in the meantime
-    while (_serialport->available()) {
-        // TODO: Add a timeout that breaks the first loop if received data never exceeds 11 bytes
-        while (_serialport->available() >= 11) {
-            status_packet_info status;
+Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket(unsigned short expected_bytes) {
+    unsigned long start_time = micros();
+    status_packet_info status;
+    status.error = 0x00;
 
+    while (micros()<start_time+5000){
+        Serial.println(_serialport->available());
+        // TODO: Solve problem when an error occurs and no parameters are returned
+        if (_serialport->available() >= 7) {
+            Serial.println("Scanning for header...");
             // Get rid of the header
             for (int i = 0; i < 2; ++i) {
                 if (_serialport->peek() == 0xFF) {
@@ -253,7 +371,7 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
             status.id = id;
 
             // Recreate RX-packet
-            unsigned char rx_packet[packet_length + 7];
+            unsigned char rx_packet[packet_length+7];
             rx_packet[0] = 0xFF;
             rx_packet[1] = 0xFF;
             rx_packet[2] = 0xFD;
@@ -262,6 +380,11 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
             rx_packet[5] = l1;
             rx_packet[6] = l2;
 
+            while (_serialport->available() < packet_length) {
+                Serial.println("Woop");
+                Serial.println(_serialport->available());
+            }
+
             // Populate the rest of the packet with instr, err, params, crc
             for (int j = 0; j < packet_length; ++j) {
                 rx_packet[j + 7] = _serialport->read();
@@ -269,21 +392,39 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
 
             // Set error in return value
             status.error = rx_packet[8];
+            if (status.error != 0x00) return status;
 
             // Extract parameters
             for (int k = 0; k < packet_length - 4; ++k) {
                 status.parameters[k] = rx_packet[9 + k];
             }
 
-            // TODO: Calculate CRC of status packet
+            unsigned short calc_crc = update_crc(0, rx_packet, packet_length+5);
+            if ((rx_packet[packet_length+5] != (calc_crc & 0xFF)) | (rx_packet[packet_length+6] != ((calc_crc >> 8) & 0xFF))){
+                status.error = 0x03; // CRC error
+            }
 
+
+            // Print packet for debugging
+            for (int l = 0; l < packet_length+7; ++l) {
+                Serial.print(rx_packet[l], HEX);
+                Serial.print(" ");
+            }
+            Serial.println();
+
+            Serial.println(status.error, HEX);
+
+
+            // TODO: Clear the RX-buffer?
             return status;
         }
     }
+
+    status.error = 0x09; // TIMEOUT ERROR
+    return status;
 }
 
-unsigned short
-Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size) {
+unsigned short Dynamixel_p2::update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size) {
     unsigned short i, j;
     unsigned short crc_table[256] = {
             0x0000, 0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
@@ -356,7 +497,6 @@ void Dynamixel_p2::Create3Params(unsigned char value, unsigned char *package,
     package[9] = 0x00;
 }
 
-
 char Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address,
                                 unsigned char *tx_packet) { // Takes a parameter and an address. Figures out how many bytes is needed.
     for (int i = 0; i < 31; i++) {
@@ -393,4 +533,27 @@ void Dynamixel_p2::Expectedparams(unsigned char address, unsigned char *tx_packe
             tx_packet[11] = 0;
         }
     }
+}
+
+// TODO: Consider generalizing this function to other datatypes
+unsigned long Dynamixel_p2::charArrayToLong(unsigned char *array) {
+    unsigned long value = 0;
+    for (int i = 0; i < 4; ++i) {
+        value += ((unsigned long) array[i] << i*8) & (0x000000FF << i*8);
+    }
+    return value;
+}
+
+template <typename T>
+T Dynamixel_p2::genericGet(unsigned char id, unsigned char bytes, unsigned short address) {
+    unsigned char tx_packet[14];
+
+    Dynamixel_p2::ConstructPacket(tx_packet, id, READ, bytes, address);
+    Dynamixel_p2::TransmitPacket(tx_packet);
+
+    status_packet_info status = Dynamixel_p2::ReceiveStatusPacket(bytes+11);
+    Serial.println(status.error);
+    T receivedData = (T) Dynamixel_p2::charArrayToLong(status.parameters);
+
+    return receivedData;
 }
