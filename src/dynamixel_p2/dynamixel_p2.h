@@ -16,6 +16,7 @@ private:
     // ATTRIBUTES
     Stream *_serialport;
     int _flow_control_pin = 13;
+
     struct status_packet_info{
         unsigned char id;
         unsigned char error;
@@ -30,7 +31,7 @@ private:
                                        unsigned long params, unsigned char address); // Function that constructs packets, given id, instr, and parameters
     void TransmitPacket(unsigned char *tx_packet); // Function to send a package
     char ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet); // Takes a parameter and an address. Figures out how many bytes is needed.
-    status_packet_info ReceiveStatusPacket(); // Function to read the contents of received packages
+    status_packet_info ReceiveStatusPacket(unsigned short expected_bytes); // Function to read the contents of received packages
 
 
     unsigned short update_crc (unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size); // Calculates CRC
@@ -38,6 +39,11 @@ private:
     void Create6Params (unsigned long value, unsigned char *package, unsigned char address); // Function designed to split up a 32 Bit value in a 4x8 bit array.
     void Create4Params (unsigned int value, unsigned char *package, unsigned char address); // 16it to 2x8 bit.
     void Create3Params (unsigned char value, unsigned char *package, unsigned char address);
+
+    unsigned long charArrayToLong(unsigned char *array); // Function to convert array of 4 chars to long
+
+    template <typename T>
+    T genericGet(unsigned char id, unsigned char bytes, unsigned short address);
 public:
     // CONSTRUCTORS
     Dynamixel_p2(int flow_control_pin);
@@ -45,6 +51,7 @@ public:
     void begin(long baud_rate);
     void EEPROM(); //Function to setup EEPROM Operation mode to PWM
     void RAM(unsigned char id); // Function for initial values in the RAM AREA (Gain etc).
+
     // SETTERS
     void NSFW();
     void setTorqueEnable(unsigned char id, unsigned char value);
@@ -65,44 +72,42 @@ public:
     void setProfileVelocity(unsigned char id, unsigned long value);
     void setGoalPosition(unsigned char id, unsigned long value);
 
-    void setAddress(unsigned char id, unsigned int address, unsigned long value);
+    //void setAddress(unsigned char id, unsigned int address, unsigned long value);
 
     // GETTERS
-    unsigned char getTorqueEnable(unsigned char id, unsigned int bytes);
-    unsigned char getLedStatus(unsigned char id, unsigned int bytes);
-    unsigned char getStatusReturnLevel(unsigned char id, unsigned int bytes);
-    unsigned char getRegisteredInstruction(unsigned char id, unsigned int bytes);
-    unsigned char getHardwareError(unsigned char id, unsigned int bytes);
-    unsigned int getVelocityGainI(unsigned char id, unsigned int bytes);
-    unsigned int getVelocityGainP(unsigned char id, unsigned int bytes);
-    unsigned int getVelocityGainD(unsigned char id, unsigned int bytes);
-    unsigned int getPositionGainD(unsigned char id, unsigned int bytes);
-    unsigned int getPositionGainI(unsigned char id, unsigned int bytes);
-    unsigned int getPositionGainP(unsigned char id, unsigned int bytes);
-    unsigned int getFF2Gain(unsigned char id, unsigned int bytes);
-    unsigned int getFF1Gain(unsigned char id, unsigned int bytes);
-    unsigned char getBusWatchdog(unsigned char id, unsigned int bytes);
-    unsigned int getGoalPwm(unsigned char id, unsigned int bytes);
-    unsigned int getGoalCurrent(unsigned char id, unsigned int bytes);
-    unsigned long getGoalVelocity(unsigned char id, unsigned int bytes);
-    unsigned long getProfileAcceleration(unsigned char id, unsigned int bytes);
-    unsigned long getProfileVelocity(unsigned char id, unsigned int bytes);
-    unsigned long getGoalPosition(unsigned char id, unsigned int bytes);
-    unsigned char getMoving(unsigned char id, unsigned int bytes);
-    unsigned char getMovingDetailed(unsigned char id, unsigned int bytes);
-    unsigned int getPresentPwm(unsigned char id, unsigned int bytes);
-    unsigned int getPresentCurrent(unsigned char id, unsigned int bytes);
-    unsigned long getPresentVelocity(unsigned char id, unsigned int bytes);
-    unsigned long getPresentPosition(unsigned char id, unsigned int bytes);
-    unsigned long getVelocityTrajectory(unsigned char id, unsigned int bytes);
-    unsigned long getPositionTrajectory(unsigned char id, unsigned int bytes);
-    unsigned int getPresentInputVoltage(unsigned char id, unsigned int bytes);
-    unsigned char getTemperature(unsigned char id, unsigned int bytes);
+    unsigned char getTorqueEnable(unsigned char id);
+    unsigned char getLedStatus(unsigned char id);
+    unsigned char getStatusReturnLevel(unsigned char id);
+    unsigned char getRegisteredInstruction(unsigned char id);
+    unsigned char getHardwareError(unsigned char id);
+    unsigned short getVelocityGainI(unsigned char id);
+    unsigned short getVelocityGainP(unsigned char id);
+    unsigned short getPositionGainD(unsigned char id);
+    unsigned short getPositionGainI(unsigned char id);
+    unsigned short getPositionGainP(unsigned char id);
+    unsigned short getFF2Gain(unsigned char id);
+    unsigned short getFF1Gain(unsigned char id);
+    unsigned char getBusWatchdog(unsigned char id);
+    unsigned short getGoalPwm(unsigned char id);
+    unsigned short getGoalCurrent(unsigned char id);
+    unsigned long getGoalVelocity(unsigned char id);
+    unsigned long getProfileAcceleration(unsigned char id);
+    unsigned long getProfileVelocity(unsigned char id);
+    unsigned long getGoalPosition(unsigned char id);
+    unsigned short getRealtimeTick(unsigned char id);
+    unsigned char getMoving(unsigned char id);
+    unsigned char getMovingDetailed(unsigned char id);
+    unsigned short getPresentPwm(unsigned char id);
+    unsigned short getPresentCurrent(unsigned char id);
+    unsigned long getPresentVelocity(unsigned char id);
+    unsigned long getPresentPosition(unsigned char id);
+    unsigned long getVelocityTrajectory(unsigned char id);
+    unsigned long getPositionTrajectory(unsigned char id);
+    unsigned short getPresentInputVoltage(unsigned char id);
+    unsigned char getTemperature(unsigned char id);
 
     // PING
     void PingServo(unsigned char id);
-    void getCurrentPWM(unsigned char id, unsigned long value);
-    void getTorqueEnable();
     void Expectedparams(unsigned char address, unsigned char *tx_packet);
 
 };
