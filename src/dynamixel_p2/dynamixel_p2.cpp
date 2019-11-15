@@ -313,7 +313,14 @@ void Dynamixel_p2::ConstructPacket(unsigned char *tx_packet, unsigned char devic
                                    unsigned long params, unsigned char address) {
     CreateHeader(tx_packet, device_id);
     CreateInstruction(tx_packet, instruction);
-    char param_size = ChooseParams(params, address, tx_packet);
+    char param_size;
+    if (instruction == READ) {
+        Dynamixel_p2::Create4Params((unsigned int) params, tx_packet, address);
+        param_size = 4;
+    }
+    else {
+        param_size = ChooseParams(params, address, tx_packet);
+    }
     unsigned short packet_length = CreateLength(tx_packet, param_size);
     CreateCRC(tx_packet, packet_length + 5); // The 5 is the size of header.
 }
@@ -324,18 +331,20 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet) {
 
     for (int i = 0; i < bytes_in_packet; i++) {
         _serialport->write(tx_packet[i]);
+        Serial.print(tx_packet[i], HEX);
+        Serial.print(" ");
     }
     _serialport->flush();
     digitalWrite(_flow_control_pin, LOW);
 }
 
-Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket(unsigned short expected_bytes) {
+Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
     unsigned long start_time = micros();
     status_packet_info status;
     status.error = 0x00;
 
     while (micros()<start_time+5000){
-        Serial.println(_serialport->available());
+        // Serial.println(_serialport->available());
         // TODO: Solve problem when an error occurs and no parameters are returned
         if (_serialport->available() >= 7) {
             Serial.println("Scanning for header...");
@@ -524,17 +533,6 @@ void Dynamixel_p2::CreateCRC(unsigned char *tx_packet, unsigned short blk_size) 
     tx_packet[blk_size + 1] = (cal_crc >> 8) & 0x00FF;
 }
 
-void Dynamixel_p2::Expectedparams(unsigned char address, unsigned char *tx_packet) {
-    tx_packet[8] = address; // Adds low order byte address
-    tx_packet[9] = 0x00;
-    for (int j = 0; j < 31; j++) {
-        if (addresses[j] == address) {
-            tx_packet[10] = prefBytes[j] - 2;
-            tx_packet[11] = 0;
-        }
-    }
-}
-
 // TODO: Consider generalizing this function to other datatypes
 unsigned long Dynamixel_p2::charArrayToLong(unsigned char *array) {
     unsigned long value = 0;
@@ -545,13 +543,13 @@ unsigned long Dynamixel_p2::charArrayToLong(unsigned char *array) {
 }
 
 template <typename T>
-T Dynamixel_p2::genericGet(unsigned char id, unsigned char bytes, unsigned short address) {
+T Dynamixel_p2::genericGet(unsigned char id, unsigned short bytes, unsigned short address) {
     unsigned char tx_packet[14];
 
     Dynamixel_p2::ConstructPacket(tx_packet, id, READ, bytes, address);
     Dynamixel_p2::TransmitPacket(tx_packet);
 
-    status_packet_info status = Dynamixel_p2::ReceiveStatusPacket(bytes+11);
+    status_packet_info status = Dynamixel_p2::ReceiveStatusPacket();
     Serial.println(status.error);
     T receivedData = (T) Dynamixel_p2::charArrayToLong(status.parameters);
 
