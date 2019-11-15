@@ -40,7 +40,8 @@ private:
     void Create4Params (unsigned int value, unsigned char *package, unsigned char address); // 16it to 2x8 bit.
     void Create3Params (unsigned char value, unsigned char *package, unsigned char address);
 
-    unsigned long charArrayToLong(unsigned char *array); // Function to convert array of 4 chars to long
+    template <typename T>
+    T charArrayToValue(unsigned char *array); // Function to convert array of 4 chars to type T
 
     template <typename T>
     T genericGet(unsigned char id, unsigned short bytes, unsigned short address);
