@@ -15,7 +15,7 @@ void setup() {
  //TEST.PingServo(0x01);
  //TEST.setGoalPWM(0x01, (unsigned long)512);
  trqen = TEST.getTorqueEnable(1);
- //pos_gain_p = TEST.getPositionGainP(1);
+ //pos_gain_p = TEST.getVelocityGainI(1);
  Serial.println(trqen);
  //Serial.println(pos_gain_p);
  //delay(2000);
