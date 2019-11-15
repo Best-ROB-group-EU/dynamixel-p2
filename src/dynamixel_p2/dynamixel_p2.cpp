@@ -114,6 +114,7 @@ void Dynamixel_p2::setGoalCurrent(unsigned char id, unsigned int value) {
     Dynamixel_p2::ConstructPacket(Pkg, id, WRITE, value, 0x66);
     Dynamixel_p2::TransmitPacket(Pkg);
 }
+
 void Dynamixel_p2::setGoalVelocity(unsigned char id, unsigned long value){
     unsigned char Pkg[16];
     Dynamixel_p2::ConstructPacket(Pkg, id, WRITE, value, 0x68);
@@ -533,11 +534,11 @@ void Dynamixel_p2::CreateCRC(unsigned char *tx_packet, unsigned short blk_size) 
     tx_packet[blk_size + 1] = (cal_crc >> 8) & 0x00FF;
 }
 
-// TODO: Consider generalizing this function to other datatypes
-unsigned long Dynamixel_p2::charArrayToLong(unsigned char *array) {
-    unsigned long value = 0;
-    for (int i = 0; i < 4; ++i) {
-        value += ((unsigned long) array[i] << i*8) & (0x000000FF << i*8);
+template <typename T>
+T Dynamixel_p2::charArrayToValue(unsigned char *array) {
+    T value = 0;
+    for (int i = 0; i < sizeof(T); ++i) {
+        value += ((T) array[i] << i*8) & ((T) 0xFF << i*8);
     }
     return value;
 }
@@ -551,7 +552,7 @@ T Dynamixel_p2::genericGet(unsigned char id, unsigned short bytes, unsigned shor
 
     status_packet_info status = Dynamixel_p2::ReceiveStatusPacket();
     Serial.println(status.error);
-    T receivedData = (T) Dynamixel_p2::charArrayToLong(status.parameters);
+    T receivedData = (T) Dynamixel_p2::charArrayToValue<T>(status.parameters);
 
     return receivedData;
 }
