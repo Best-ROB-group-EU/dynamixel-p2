@@ -22,6 +22,7 @@ private:
         unsigned char error;
         unsigned char parameters[4];
     };
+
     // METHODS
     void CreateHeader(unsigned char *tx_packet, unsigned char id); // Function to build header (FF FF FD 00)
     void CreateInstruction(unsigned char *tx_packet, unsigned char instruction);
@@ -41,10 +42,11 @@ private:
     void Create3Params (unsigned char value, unsigned char *package, unsigned char address);
 
     template <typename T>
-    T charArrayToValue(unsigned char *array); // Function to convert array of 4 chars to type T
+    T charArrayToValue(unsigned char *array); // Function to convert array of chars to type T
 
     template <typename T>
-    T genericGet(unsigned char id, unsigned short bytes, unsigned short address);
+    T genericGet(unsigned char id, unsigned short bytes, unsigned short address); // Function template for reading from motors
+
 public:
     // CONSTRUCTORS
     Dynamixel_p2(int flow_control_pin);
