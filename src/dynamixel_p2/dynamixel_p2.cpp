@@ -12,7 +12,6 @@ unsigned char instructions[13] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x10
 // Holds the beginning of parameters for those instructions.
 unsigned char firstParameter[13] = {0, 10, 10, 10, 0, 8, 0, 0};
 
-
 // CONSTRUCTOR
 Dynamixel_p2::Dynamixel_p2(int flow_control_pin) {
     _flow_control_pin = flow_control_pin;
