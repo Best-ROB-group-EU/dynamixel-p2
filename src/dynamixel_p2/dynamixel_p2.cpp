@@ -269,7 +269,7 @@ unsigned char Dynamixel_p2::getTemperature(unsigned char id){
 }
 
 
-// Following method written by TODO: Insert original author
+// Following method written by github user zcshiner
 void Dynamixel_p2::begin(long baud_rate = 57600) {
 #if defined(__AVR_ATmega32U4__) || defined(__MK20DX128__) || defined(__AVR_ATmega2560__)
     Serial1.begin(baud_rate);  // Set up Serial for Leonardo and Mega
@@ -331,8 +331,8 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet) {
 
     for (int i = 0; i < bytes_in_packet; i++) {
         _serialport->write(tx_packet[i]);
-        Serial.print(tx_packet[i], HEX);
-        Serial.print(" ");
+        //Serial.print(tx_packet[i], HEX);
+        //Serial.print(" ");
     }
     _serialport->flush();
     digitalWrite(_flow_control_pin, LOW);
@@ -344,10 +344,8 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
     status.error = 0x00;
 
     while (micros()<start_time+5000){
-        // Serial.println(_serialport->available());
-        // TODO: Solve problem when an error occurs and no parameters are returned
         if (_serialport->available() >= 7) {
-            Serial.println("Scanning for header...");
+            //Serial.println("Scanning for header...");
             // Get rid of the header
             for (int i = 0; i < 2; ++i) {
                 if (_serialport->peek() == 0xFF) {
@@ -390,8 +388,7 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
             rx_packet[6] = l2;
 
             while (_serialport->available() < packet_length) {
-                Serial.println("Woop");
-                Serial.println(_serialport->available());
+                // Serial.println(_serialport->available());
             }
 
             // Populate the rest of the packet with instr, err, params, crc
@@ -415,13 +412,13 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
 
 
             // Print packet for debugging
-            for (int l = 0; l < packet_length+7; ++l) {
+            /*for (int l = 0; l < packet_length+7; ++l) {
                 Serial.print(rx_packet[l], HEX);
                 Serial.print(" ");
             }
             Serial.println();
 
-            Serial.println(status.error, HEX);
+            Serial.println(status.error, HEX);*/
 
 
             // TODO: Clear the RX-buffer?
