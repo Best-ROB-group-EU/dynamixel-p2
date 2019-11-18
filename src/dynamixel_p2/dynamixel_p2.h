@@ -31,7 +31,7 @@ private:
                                        unsigned long params, unsigned char address); // Function that constructs packets, given id, instr, and parameters
     void TransmitPacket(unsigned char *tx_packet); // Function to send a package
     char ChooseParams(unsigned long value, unsigned char address, unsigned char *tx_packet); // Takes a parameter and an address. Figures out how many bytes is needed.
-    status_packet_info ReceiveStatusPacket(unsigned short expected_bytes); // Function to read the contents of received packages
+    status_packet_info ReceiveStatusPacket(); // Function to read the contents of received packages
 
 
     unsigned short update_crc (unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size); // Calculates CRC
@@ -40,10 +40,11 @@ private:
     void Create4Params (unsigned int value, unsigned char *package, unsigned char address); // 16it to 2x8 bit.
     void Create3Params (unsigned char value, unsigned char *package, unsigned char address);
 
-    unsigned long charArrayToLong(unsigned char *array); // Function to convert array of 4 chars to long
+    template <typename T>
+    T charArrayToValue(unsigned char *array); // Function to convert array of 4 chars to type T
 
     template <typename T>
-    T genericGet(unsigned char id, unsigned char bytes, unsigned short address);
+    T genericGet(unsigned char id, unsigned short bytes, unsigned short address);
 public:
     // CONSTRUCTORS
     Dynamixel_p2(int flow_control_pin);
@@ -108,7 +109,6 @@ public:
 
     // PING
     void PingServo(unsigned char id);
-    void Expectedparams(unsigned char address, unsigned char *tx_packet);
-
 };
+
 #endif //DYNAMIXEL_P2_DYNAMIXEL_P2_H
