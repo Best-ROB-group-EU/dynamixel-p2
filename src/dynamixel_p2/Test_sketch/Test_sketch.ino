@@ -4,25 +4,29 @@ Dynamixel_p2 TEST(13);
 
 unsigned char trqen = 0;
 unsigned short pos_gain_p = 0;
+unsigned long samplingT = micros();
 
 void setup() {
  Serial.begin(57600);
  TEST.begin(57600);
  //TEST.RAM(0xFE);
- TEST.setTorqueEnable(0xFE, (unsigned long) 1);
+ //TEST.setTorqueEnable(0xFE, (unsigned long) 1);
  //delay(1000);
  //TEST.setGoalPosition(0xFE, (unsigned long) 2048);
  //TEST.PingServo(0x01);
  //TEST.setGoalPWM(0x01, (unsigned long)512);
  //trqen = TEST.getTorqueEnable(1);
- pos_gain_p = TEST.getPositionGainP(1);
+ // pos_gain_p = TEST.getPositionGainP(1);
  //Serial.println(trqen);
- Serial.println(pos_gain_p);
+ //Serial.println(pos_gain_p);
  //delay(2000);
  //Serial.println(TEST.getPositionGainP(1));
 
 }
 
 void loop() {
-  //Serial.println(TEST.getPresentPosition(1));
+  if (micros() - samplingT > 1000000){ // If loop runs about every 10K Microseconds so with 100Hz
+    Serial.println(TEST.getPresentPosition((unsigned char)1));
+    samplingT = micros();
+  }
 }

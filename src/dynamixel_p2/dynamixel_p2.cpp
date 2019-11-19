@@ -31,6 +31,12 @@ void Dynamixel_p2::PingServo(unsigned char id) {
     Dynamixel_p2::TransmitPacket(PingPkg);
 }
 
+void Dynamixel_p2::EEPROM(){ // Set all servos to PWM mode.
+    unsigned char EEPROMPkg[16];
+    Dynamixel_p2::ConstructPacket(EEPROMPkg, 0xFE, 0x03, 16, 11);
+    Dynamixel_p2::TransmitPacket(EEPROMPkg);
+}
+
 void Dynamixel_p2::RAM(unsigned char id) {
     unsigned char RAMPkg[16];
     Dynamixel_p2::ConstructPacket(RAMPkg, id, 0x03, 100, 0x54); // Position gain P
