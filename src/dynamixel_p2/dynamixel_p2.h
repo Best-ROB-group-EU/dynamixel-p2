@@ -75,6 +75,8 @@ public:
     void setProfileVelocity(unsigned char id, unsigned long value);
     void setGoalPosition(unsigned char id, unsigned long value);
 
+    void setOperationMode(unsigned char id, unsigned char value);
+
     //void setAddress(unsigned char id, unsigned int address, unsigned long value);
 
     // GETTERS
