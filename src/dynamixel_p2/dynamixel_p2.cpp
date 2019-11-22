@@ -2,10 +2,10 @@
 #include "dynamixel_p2.h"
 
 // Contains adresses of the RAM control table
-unsigned char addresses[31] = {0, 64, 65, 68, 69, 70, 76, 78, 80, 82, 84, 88, 90, 98, 100, 102, 104, 108, 112, 116, 120,
+unsigned char addresses[32] = {0, 11, 64, 65, 68, 69, 70, 76, 78, 80, 82, 84, 88, 90, 98, 100, 102, 104, 108, 112, 116, 120,
                                122, 123, 124, 126, 128, 132, 136, 140, 144, 146};
 // Contains the expected amount of Bytes to the addresses.
-unsigned char prefBytes[31] = {0, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 3, 4, 4, 6, 6, 6, 6, 4, 3, 3, 4, 4, 6, 6, 6, 6, 4,
+unsigned char prefBytes[32] = {0, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 3, 4, 4, 6, 6, 6, 6, 4, 3, 3, 4, 4, 6, 6, 6, 6, 4,
                                3};
 // Holds instructions
 unsigned char instructions[13] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x10, 0x55, 0x82, 0x83, 0x92, 0x93};
@@ -20,6 +20,15 @@ Dynamixel_p2::Dynamixel_p2(int flow_control_pin) {
 }
 
 // PUBLIC
+void Dynamixel_p2::setOperationMode(unsigned char id, unsigned char value) {
+    unsigned char tx_packet[13];
+    ConstructPacket(tx_packet, id, 0x03, value, 0x0B);
+    TransmitPacket(tx_packet);
+    status_packet_info status = ReceiveStatusPacket();
+    Serial.print("Error code: ");
+    Serial.println(status.error, HEX);
+}
+
 void Dynamixel_p2::setTorqueEnable(unsigned char id, unsigned char value) {
     unsigned char TorquePkg[13];
     Dynamixel_p2::ConstructPacket(TorquePkg, id, 0x03, value, 0x40);
@@ -506,7 +515,7 @@ void Dynamixel_p2::Create3Params(unsigned char value, unsigned char *package,
 
 char Dynamixel_p2::ChooseParams(unsigned long value, unsigned char address,
                                 unsigned char *tx_packet) { // Takes a parameter and an address. Figures out how many bytes is needed.
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 32; i++) {
         if (addresses[i] == address) {
             switch (prefBytes[i]) {
                 case 0:
