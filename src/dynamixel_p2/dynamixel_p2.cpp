@@ -7,10 +7,6 @@ unsigned char addresses[31] = {0, 64, 65, 68, 69, 70, 76, 78, 80, 82, 84, 88, 90
 // Contains the expected amount of Bytes to the addresses.
 unsigned char prefBytes[31] = {0, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 3, 4, 4, 6, 6, 6, 6, 4, 3, 3, 4, 4, 6, 6, 6, 6, 4,
                                3};
-// Holds instructions
-unsigned char instructions[13] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x10, 0x55, 0x82, 0x83, 0x92, 0x93};
-// Holds the beginning of parameters for those instructions.
-unsigned char firstParameter[13] = {0, 10, 10, 10, 0, 8, 0, 0};
 
 // CONSTRUCTOR
 Dynamixel_p2::Dynamixel_p2(int flow_control_pin) {
@@ -111,7 +107,6 @@ void Dynamixel_p2::setGoalPwm(unsigned char id, unsigned int value) {
     unsigned char PWMPkg[14];
     Dynamixel_p2::ConstructPacket(PWMPkg, id, WRITE, value, 0x64);
     Dynamixel_p2::TransmitPacket(PWMPkg);
-
 }
 
 void Dynamixel_p2::setGoalCurrent(unsigned char id, unsigned int value) {
@@ -144,14 +139,22 @@ void Dynamixel_p2::setGoalPosition(unsigned char id, unsigned long value) {
     Dynamixel_p2::TransmitPacket(GoalPkg);
 }
 
-void Dynamixel_p2::NSFW() {
+void Dynamixel_p2::NSFW(unsigned int intensity) {
     unsigned char NSFWPkg[16];
     Dynamixel_p2::ConstructPacket(NSFWPkg, 0x03, 0x03, 800, 0x74);
     Dynamixel_p2::TransmitPacket(NSFWPkg);
-    delay(500);
+    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x04, 0x03, 1548, 0x74);
+    Dynamixel_p2::TransmitPacket(NSFWPkg);
+    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x05, 0x03, 2548, 0x74);
+    Dynamixel_p2::TransmitPacket(NSFWPkg);
+    delay(intensity);
     Dynamixel_p2::ConstructPacket(NSFWPkg, 0x03, 0x03, 1400, 0x74);
     Dynamixel_p2::TransmitPacket(NSFWPkg);
-    delay(500);
+    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x04, 0x03, 2048, 0x74);
+    Dynamixel_p2::TransmitPacket(NSFWPkg);
+    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x05, 0x03, 2048, 0x74);
+    Dynamixel_p2::TransmitPacket(NSFWPkg);
+    delay(intensity);
 }
 
 unsigned char Dynamixel_p2::getTorqueEnable(unsigned char id){
@@ -382,6 +385,7 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
             unsigned char l2 = _serialport->read();
             unsigned short packet_length = l1 + (l2 << 8);
             status.id = id;
+            status.params = packet_length - 4; // Stores the amount of bytes returned.
 
             // Recreate RX-packet
             unsigned char rx_packet[packet_length+7];
@@ -553,8 +557,31 @@ T Dynamixel_p2::genericGet(unsigned char id, unsigned short bytes, unsigned shor
     Dynamixel_p2::TransmitPacket(tx_packet);
 
     status_packet_info status = Dynamixel_p2::ReceiveStatusPacket();
-    Serial.println(status.error);
+    //Serial.write(status.error);
     T receivedData = (T) Dynamixel_p2::charArrayToValue<T>(status.parameters);
 
     return receivedData;
+}
+
+void Dynamixel_p2::MatlabReceive(unsigned char *rx_packet) {
+    if (Serial.available()>= 3){//Waits for Matlab to have returned the data.
+        for (int i = 0; i < 3, i++){
+            rx_packet[i] = Serial.read(); // Contains GoalCurrent in slot 0,1 in little endian format and 2nd input holds value for event.
+        }
+    }
+}
+
+void Dynamixel_p2::MatlabTransmit() { //Transmits Present Position and velocity for all Dynamixels to Matlab for proccessing.
+    Serial.write(Dynamixel_p2::getPresentVelocity(0x01));
+    Serial.write(Dynamixel_p2::getPresentPosition(0x01));
+    Serial.write(Dynamixel_p2::getPresentVelocity(0x02));
+    Serial.write(Dynamixel_p2::getPresentPosition(0x02));
+    Serial.write(Dynamixel_p2::getPresentVelocity(0x03));
+    Serial.write(Dynamixel_p2::getPresentPosition(0x03));
+    /*
+    Serial.write(Dynamixel_p2::getPresentVelocity(0x04));
+    Serial.write(Dynamixel_p2::getPresentPosition(0x04));
+    Serial.write(Dynamixel_p2::getPresentVelocity(0x05));
+    Serial.write(Dynamixel_p2::getPresentPosition(0x05));
+     /*/
 }

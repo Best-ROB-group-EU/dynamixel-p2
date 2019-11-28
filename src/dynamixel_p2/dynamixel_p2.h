@@ -21,6 +21,7 @@ private:
         unsigned char id;
         unsigned char error;
         unsigned char parameters[4];
+        unsigned short params;
     };
 
     // METHODS
@@ -54,9 +55,11 @@ public:
     void begin(long baud_rate);
     void EEPROM(); //Function to setup EEPROM Operation mode to PWM
     void RAM(unsigned char id); // Function for initial values in the RAM AREA (Gain etc).
+    void MatlabTransmit();
+    void MatlabReceive(unsigned char *rx_packet);
 
     // SETTERS
-    void NSFW();
+    void NSFW(unsigned int intensity);
     void setTorqueEnable(unsigned char id, unsigned char value);
     void setLedStatus(unsigned char id, unsigned char value);
     void setStatusReturnLevel(unsigned char id, unsigned char value);
