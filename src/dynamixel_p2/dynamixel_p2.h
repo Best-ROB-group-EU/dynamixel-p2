@@ -72,7 +72,7 @@ public:
     void setFF1Gain(unsigned char id, unsigned int value);
     void setBusWatchdog(unsigned char id, unsigned char value);
     void setGoalPwm(unsigned char id, unsigned int value);
-    void setGoalCurrent(unsigned char id, unsigned int value);
+    void setGoalCurrent(unsigned char id, int value);
     void setGoalVelocity(unsigned char id, unsigned long value);
     void setProfileAcceleration(unsigned char id, unsigned long value);
     void setProfileVelocity(unsigned char id, unsigned long value);

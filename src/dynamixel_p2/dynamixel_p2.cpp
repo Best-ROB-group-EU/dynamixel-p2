@@ -109,7 +109,7 @@ void Dynamixel_p2::setGoalPwm(unsigned char id, unsigned int value) {
     Dynamixel_p2::TransmitPacket(PWMPkg);
 }
 
-void Dynamixel_p2::setGoalCurrent(unsigned char id, unsigned int value) {
+void Dynamixel_p2::setGoalCurrent(unsigned char id, int value) {
     unsigned char Pkg[14];
     Dynamixel_p2::ConstructPacket(Pkg, id, WRITE, value, 0x66);
     Dynamixel_p2::TransmitPacket(Pkg);
@@ -565,19 +565,49 @@ T Dynamixel_p2::genericGet(unsigned char id, unsigned short bytes, unsigned shor
 
 void Dynamixel_p2::MatlabReceive(unsigned char *rx_packet) {
     if (Serial.available()>= 3){//Waits for Matlab to have returned the data.
-        for (int i = 0; i < 3, i++){
+        for (int i = 0; i < 3; i++){
             rx_packet[i] = Serial.read(); // Contains GoalCurrent in slot 0,1 in little endian format and 2nd input holds value for event.
         }
     }
 }
 
 void Dynamixel_p2::MatlabTransmit() { //Transmits Present Position and velocity for all Dynamixels to Matlab for proccessing.
-    Serial.write(Dynamixel_p2::getPresentVelocity(0x01));
-    Serial.write(Dynamixel_p2::getPresentPosition(0x01));
-    Serial.write(Dynamixel_p2::getPresentVelocity(0x02));
-    Serial.write(Dynamixel_p2::getPresentPosition(0x02));
-    Serial.write(Dynamixel_p2::getPresentVelocity(0x03));
-    Serial.write(Dynamixel_p2::getPresentPosition(0x03));
+    unsigned char tx_packet[24];
+    unsigned long value = 0;
+    value = Dynamixel_p2::getPresentVelocity(0x01);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentVelocity(0x02);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[4+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentVelocity(0x03);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[8+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentPosition(0x01);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[12+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentPosition(0x02);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[16+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentPosition(0x03);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[20+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+
+    for (int i = 0; i < 24; i++){
+        Serial.write(tx_packet[i]);
+    }
     /*
     Serial.write(Dynamixel_p2::getPresentVelocity(0x04));
     Serial.write(Dynamixel_p2::getPresentPosition(0x04));
