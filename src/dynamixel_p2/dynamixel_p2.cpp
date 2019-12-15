@@ -1,4 +1,5 @@
 // Created by 19gr362 Aalborg University, Robotics third semester.
+// Authors, Frederik J. Christensen & Rasmus Skjelsager.
 #include "dynamixel_p2.h"
 
 // Contains adresses of the RAM control table
@@ -9,8 +10,8 @@ unsigned char prefBytes[32] = {0, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 3, 4, 4
                                3};
 
 // CONSTRUCTOR
-Dynamixel_p2::Dynamixel_p2(int flow_control_pin) {
-    _flow_control_pin = flow_control_pin;
+Dynamixel_p2::Dynamixel_p2(int flow_control_pin) { // flow control pin is defined by default at pin 13. But can be changed.
+    _flow_control_pin = flow_control_pin; //It is standard to use _Variable when storing private variables.
     pinMode(_flow_control_pin, OUTPUT);
 }
 
@@ -36,18 +37,22 @@ void Dynamixel_p2::PingServo(unsigned char id) {
     Dynamixel_p2::TransmitPacket(PingPkg);
 }
 
-void Dynamixel_p2::EEPROM(){ // Set all servos to PWM mode.
+void Dynamixel_p2::PERMRAM(){ // Set all servos to PWM mode.
     unsigned char EEPROMPkg[16];
-    Dynamixel_p2::ConstructPacket(EEPROMPkg, 0xFE, 0x03, 16, 11);
+    Dynamixel_p2::ConstructPacket(EEPROMPkg, 0x01, 0x03, 0, 11); //Sets Operation mode to 0 (current control) for servo ID 1.
+    Dynamixel_p2::TransmitPacket(EEPROMPkg);
+    Dynamixel_p2::ConstructPacket(EEPROMPkg, 0x02, 0x03, 0, 11); //Sets Operation mode to 0 (current control) for servo ID 2.
+    Dynamixel_p2::TransmitPacket(EEPROMPkg);
+    Dynamixel_p2::ConstructPacket(EEPROMPkg, 0x03, 0x03, 0, 11); //Sets Operation mode to 0 (current control) for servo ID 3.
     Dynamixel_p2::TransmitPacket(EEPROMPkg);
 }
 
 void Dynamixel_p2::RAM(unsigned char id) {
     unsigned char RAMPkg[16];
-    Dynamixel_p2::ConstructPacket(RAMPkg, id, 0x03, 100, 0x54); // Position gain P
+    Dynamixel_p2::ConstructPacket(RAMPkg, id, 0x03, 100, 0x54); // Position gain P = 100, default setup. for ID
     Dynamixel_p2::TransmitPacket(RAMPkg);
 
-    Dynamixel_p2::ConstructPacket(RAMPkg, id, 0x03, 1, 0x40); // Enables torque
+    Dynamixel_p2::ConstructPacket(RAMPkg, id, 0x03, 1, 0x40); // Enables torque for ID
     Dynamixel_p2::TransmitPacket(RAMPkg);
 
 }
@@ -118,10 +123,12 @@ void Dynamixel_p2::setGoalPwm(unsigned char id, unsigned int value) {
     Dynamixel_p2::TransmitPacket(PWMPkg);
 }
 
-void Dynamixel_p2::setGoalCurrent(unsigned char id, unsigned int value) {
+void Dynamixel_p2::setGoalCurrent(unsigned char id, short value) {
     unsigned char Pkg[14];
     Dynamixel_p2::ConstructPacket(Pkg, id, WRITE, value, 0x66);
     Dynamixel_p2::TransmitPacket(Pkg);
+    Dynamixel_p2::ReceiveStatusPacket(); //set functions returns status packets on the Serial port. This was added to clear it.
+
 }
 
 void Dynamixel_p2::setGoalVelocity(unsigned char id, unsigned long value){
@@ -146,24 +153,6 @@ void Dynamixel_p2::setGoalPosition(unsigned char id, unsigned long value) {
     unsigned char GoalPkg[16];
     Dynamixel_p2::ConstructPacket(GoalPkg, id, 0x03, value, 0x74);
     Dynamixel_p2::TransmitPacket(GoalPkg);
-}
-
-void Dynamixel_p2::NSFW(unsigned int intensity) {
-    unsigned char NSFWPkg[16];
-    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x03, 0x03, 800, 0x74);
-    Dynamixel_p2::TransmitPacket(NSFWPkg);
-    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x04, 0x03, 1548, 0x74);
-    Dynamixel_p2::TransmitPacket(NSFWPkg);
-    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x05, 0x03, 2548, 0x74);
-    Dynamixel_p2::TransmitPacket(NSFWPkg);
-    delay(intensity);
-    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x03, 0x03, 1400, 0x74);
-    Dynamixel_p2::TransmitPacket(NSFWPkg);
-    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x04, 0x03, 2048, 0x74);
-    Dynamixel_p2::TransmitPacket(NSFWPkg);
-    Dynamixel_p2::ConstructPacket(NSFWPkg, 0x05, 0x03, 2048, 0x74);
-    Dynamixel_p2::TransmitPacket(NSFWPkg);
-    delay(intensity);
 }
 
 unsigned char Dynamixel_p2::getTorqueEnable(unsigned char id){
@@ -357,16 +346,16 @@ void Dynamixel_p2::TransmitPacket(unsigned char *tx_packet) {
 }
 
 Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
-    unsigned long start_time = micros();
-    status_packet_info status;
-    status.error = 0x00;
+    unsigned long start_time = micros(); // Init timer for timeout on recieving Status packet. We don't want to get stuck waiting for data.
+    status_packet_info status; //Naming a variable "status" of the type struct, containing, ID, error, parameters[], params.
+    status.error = 0x00; // Default error. (Nothing wrong)
 
     while (micros()<start_time+5000){
-        if (_serialport->available() >= 7) {
+        if (_serialport->available() >= 7) { //Waits until at least 8 bytes are available allowing to read header, lengths etc.
             //Serial.println("Scanning for header...");
             // Get rid of the header
             for (int i = 0; i < 2; ++i) {
-                if (_serialport->peek() == 0xFF) {
+                if (_serialport->peek() == 0xFF) { //Peek allows you to see the next byte without removing it from the buffer.
                     _serialport->read();
                 } else {
                     status.error = 0x08; // 0x08 is not defined in the protocol. Consider it an unknown error.
@@ -394,7 +383,7 @@ Dynamixel_p2::status_packet_info Dynamixel_p2::ReceiveStatusPacket() {
             unsigned char l2 = _serialport->read();
             unsigned short packet_length = l1 + (l2 << 8);
             status.id = id;
-            status.params = packet_length - 4; // Stores the amount of bytes returned.
+            status.params = packet_length - 4; // Stores the amount of bytes returned. Actually isn't used anymore.
 
             // Recreate RX-packet
             unsigned char rx_packet[packet_length+7];
@@ -565,28 +554,58 @@ T Dynamixel_p2::genericGet(unsigned char id, unsigned short bytes, unsigned shor
     Dynamixel_p2::ConstructPacket(tx_packet, id, READ, bytes, address);
     Dynamixel_p2::TransmitPacket(tx_packet);
 
-    status_packet_info status = Dynamixel_p2::ReceiveStatusPacket();
-    //Serial.write(status.error);
-    T receivedData = (T) Dynamixel_p2::charArrayToValue<T>(status.parameters);
+    status_packet_info status = Dynamixel_p2::ReceiveStatusPacket(); // stores the needed info from return packet.
+    //Serial.write(status.error); Is for testing purposes.
+    T receivedData = (T) Dynamixel_p2::charArrayToValue<T>(status.parameters); //Turns the char array back into a singular data type. Using template to eliminate need to specify data type.
 
     return receivedData;
 }
 
 void Dynamixel_p2::MatlabReceive(unsigned char *rx_packet) {
-    if (Serial.available()>= 3){//Waits for Matlab to have returned the data.
-        for (int i = 0; i < 3, i++){
+    if (Serial.available()> 7){//Waits for Matlab to have returned the data.
+        for (int i = 0; i < 8; i++){
             rx_packet[i] = Serial.read(); // Contains GoalCurrent in slot 0,1 in little endian format and 2nd input holds value for event.
         }
     }
 }
 
 void Dynamixel_p2::MatlabTransmit() { //Transmits Present Position and velocity for all Dynamixels to Matlab for proccessing.
-    Serial.write(Dynamixel_p2::getPresentVelocity(0x01));
-    Serial.write(Dynamixel_p2::getPresentPosition(0x01));
-    Serial.write(Dynamixel_p2::getPresentVelocity(0x02));
-    Serial.write(Dynamixel_p2::getPresentPosition(0x02));
-    Serial.write(Dynamixel_p2::getPresentVelocity(0x03));
-    Serial.write(Dynamixel_p2::getPresentPosition(0x03));
+    unsigned char tx_packet[24];
+    unsigned long value = 0;
+    value = Dynamixel_p2::getPresentVelocity(0x01);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentVelocity(0x02);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[4+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentVelocity(0x03);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[8+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentPosition(0x01);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[12+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentPosition(0x02);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[16+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+    value = Dynamixel_p2::getPresentPosition(0x03);
+    for (int i = 0; i < 4; i++) { // Repeats 4 times.
+        tx_packet[20+i] = value & 0x000000FF; // Runs bitmask over 32 bit value to 8 bit.
+        value = value >> 8; //Bitshift value by 8 bits to the right.
+    }
+
+    for (int i = 0; i < 24; i++){
+        Serial.write(tx_packet[i]);
+    }
     /*
     Serial.write(Dynamixel_p2::getPresentVelocity(0x04));
     Serial.write(Dynamixel_p2::getPresentPosition(0x04));

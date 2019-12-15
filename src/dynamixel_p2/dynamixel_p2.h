@@ -1,4 +1,5 @@
 // Created by 19gr362 Aalborg University, Robotics third semester.
+// Authors, Frederik J. Christensen & Rasmus Skjelsager.
 #ifndef DYNAMIXEL_P2_DYNAMIXEL_P2_H
 #define DYNAMIXEL_P2_DYNAMIXEL_P2_H
 
@@ -14,10 +15,10 @@ using namespace std;
 class Dynamixel_p2 {
 private:
     // ATTRIBUTES
-    Stream *_serialport;
+    Stream *_serialport; //_serialport is set as a pointer to Stream from Arduino.h
     int _flow_control_pin = 13;
 
-    struct status_packet_info{
+    struct status_packet_info{ //Holder for status packet info.
         unsigned char id;
         unsigned char error;
         unsigned char parameters[4];
@@ -53,13 +54,12 @@ public:
     Dynamixel_p2(int flow_control_pin);
     // UTILITY
     void begin(long baud_rate);
-    void EEPROM(); //Function to setup EEPROM Operation mode to PWM
+    void PERMRAM(); //Function to setup EEPROM (Operation mode, protocol etc.)
     void RAM(unsigned char id); // Function for initial values in the RAM AREA (Gain etc).
-    void MatlabTransmit();
-    void MatlabReceive(unsigned char *rx_packet);
+    void MatlabTransmit(); // Used for semester project to transmit current velocity and position for servo's not part of the gripper.
+    void MatlabReceive(unsigned char *rx_packet); //Supposed to recieve matlab response on MatlabTransmit, however this isn't in use.
 
     // SETTERS
-    void NSFW(unsigned int intensity);
     void setTorqueEnable(unsigned char id, unsigned char value);
     void setLedStatus(unsigned char id, unsigned char value);
     void setStatusReturnLevel(unsigned char id, unsigned char value);
@@ -72,7 +72,7 @@ public:
     void setFF1Gain(unsigned char id, unsigned int value);
     void setBusWatchdog(unsigned char id, unsigned char value);
     void setGoalPwm(unsigned char id, unsigned int value);
-    void setGoalCurrent(unsigned char id, unsigned int value);
+    void setGoalCurrent(unsigned char id, short value);
     void setGoalVelocity(unsigned char id, unsigned long value);
     void setProfileAcceleration(unsigned char id, unsigned long value);
     void setProfileVelocity(unsigned char id, unsigned long value);
